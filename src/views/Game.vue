@@ -15,7 +15,7 @@
         }"
         class="hex"
         :id="index + '|' + index2 + ''"
-        @click="buildTower(index, index2, $event)"
+        @click="openBuildMenu(index, index2, $event)"
       ></div>
     </div>
     <div
@@ -28,6 +28,39 @@
       }"
     ></div>
   </div>
+  <div
+    style="
+      background-color: blueviolet;
+      position: absolute;
+      height: 20px;
+      width: 20px;
+    "
+    :style="{ left: shop1.left + 'px', top: shop1.top + 'px' }"
+    @click="buildTower(shop1.position, 1)"
+    v-if="shopShow"
+  ></div>
+  <div
+    style="
+      background-color: darkorange;
+      position: absolute;
+      height: 20px;
+      width: 20px;
+    "
+    :style="{ left: shop2.left + 'px', top: shop2.top + 'px' }"
+    @click="buildTower(shop2.position, 2)"
+    v-if="shopShow"
+  ></div>
+  <div
+    style="
+      background-color: aquamarine;
+      position: absolute;
+      height: 20px;
+      width: 20px;
+    "
+    :style="{ left: shop3.left + 'px', top: shop3.top + 'px' }"
+    @click="buildTower(shop3.position, 3)"
+    v-if="shopShow"
+  ></div>
   <button class="btn btn-primary shadow-none me-1" @click="gameStarted = true">
     gameLoop
   </button>
@@ -65,6 +98,23 @@ export default defineComponent({
       gameStarted: false,
       gamelooptick: 0,
       gold: 100,
+      shopSize: 20,
+      shopShow: false,
+      shop1: {
+        left: 0,
+        top: 0,
+        position: [0, 0],
+      },
+      shop2: {
+        left: 0,
+        top: 0,
+        position: [0, 0],
+      },
+      shop3: {
+        left: 0,
+        top: 0,
+        position: [0, 0],
+      },
     };
   },
   async mounted() {
@@ -201,12 +251,51 @@ export default defineComponent({
         }
       }
     },
-    checkBuildTower(index: number, index2: number) {
+    openBuildMenu(index: number, index2: number, e: any) {
+      this.shopShow = true;
+      this.mouse.vector = [e.pageX, e.pageY];
+      let cklickedField = this.checkClickedField(index, index2) as type.Vector;
+      let rect = document
+        .getElementById(`${cklickedField[0]}|${cklickedField[1]}`)!
+        .getBoundingClientRect();
+      let shopArray = this.middlePointRect(rect);
+      shopArray[0] -= this.shopSize / 2 + 2;
+      shopArray[1] -= this.hexagonSize - this.shopSize / 2;
+      this.shop1.left = shopArray[0] - 25;
+      this.shop1.top = shopArray[1] + 10;
+      this.shop1.position = cklickedField;
+      this.shop2.left = shopArray[0];
+      this.shop2.top = shopArray[1];
+      this.shop2.position = cklickedField;
+      this.shop3.left = shopArray[0] + 25;
+      this.shop3.top = shopArray[1] + 10;
+      this.shop3.position = cklickedField;
+    },
+    checkClickedField(index: number, index2: number) {
+      if (this.checkField(index, index2)) {
+        return [index, index2];
+      }
+      if (index % 2 != 0) {
+        if (this.checkField(index, index2 - 1)) {
+          return [index, index2 - 1];
+        }
+        if (this.checkField(index - 1, index2 - 1)) {
+          return [index - 1, index2 - 1];
+        }
+      } else {
+        if (this.checkField(index - 1, index2)) {
+          return [index - 1, index2];
+        }
+        if (this.checkField(index, index2 - 1)) {
+          return [index, index2 - 1];
+        }
+      }
+    },
+    checkField(index: number, index2: number) {
       if (index2 < 0) return;
       let rect = document
         .getElementById(`${index}|${index2}`)!
         .getBoundingClientRect();
-
       if (
         this.collisionsCheck(
           this.mouse.vector,
@@ -215,10 +304,7 @@ export default defineComponent({
           22
         )
       )
-        if (this.fields[index][index2].type != "way") {
-          this.fields[index][index2] = this.towerField(`${index}|${index2}`);
-          return true;
-        }
+        if (this.fields[index][index2].type != "way") return [index, index2];
       return false;
     },
     checkPrice(price: number) {
@@ -228,24 +314,38 @@ export default defineComponent({
       }
       return false;
     },
-    buildTower(index: number, index2: number, e: any) {
+    buildTower(position: type.Vector, type: number) {
+      this.shopShow = false;
       if (!this.checkPrice(20)) return;
-      this.mouse.vector = [e.pageX, e.pageY];
-      if (this.checkBuildTower(index, index2)) return;
-      if (index % 2 != 0) {
-        if (this.checkBuildTower(index, index2 - 1)) return;
-        if (this.checkBuildTower(index - 1, index2 - 1)) return;
-      } else {
-        if (this.checkBuildTower(index + 1, index2)) return;
-        if (this.checkBuildTower(index - 1, index2)) return;
-        if (this.checkBuildTower(index, index2 - 1)) return;
+      switch (type) {
+        case 1:
+          this.fields[position[0]][position[1]] = this.tower1(
+            `${position[0]}|${position[1]}`
+          );
+          break;
+        case 2:
+          this.fields[position[0]][position[1]] = this.tower2(
+            `${position[0]}|${position[1]}`
+          );
+          break;
+        case 3:
+          this.fields[position[0]][position[1]] = this.tower3(
+            `${position[0]}|${position[1]}`
+          );
+          break;
       }
     },
     wayField(id: string) {
       return { color: "grey", type: "way", id: id };
     },
-    towerField(id: string) {
+    tower1(id: string) {
       return { color: "blueviolet", type: "tower", id: id };
+    },
+    tower2(id: string) {
+      return { color: "darkorange", type: "tower", id: id };
+    },
+    tower3(id: string) {
+      return { color: "aquamarine", type: "tower", id: id };
     },
     middlePointRect(rect: type.Rect) {
       return [
