@@ -2,7 +2,14 @@ export interface FieldDivs {
     color: string;
     type: string;
     id: string;
-    dmg?: number;
+    tower?: Tower;
+}
+export interface Tower {
+    atk: number;
+    atkspeed: number;
+    atkrdy: boolean;
+    range: number;
+
 }
 export type Fields = [
 
@@ -18,6 +25,9 @@ export interface Enemy {
     HP: number;
     movement: Movement;
 
+}
+export interface Player {
+    gold: number;
 }
 export interface Movement {
     nextField: number;

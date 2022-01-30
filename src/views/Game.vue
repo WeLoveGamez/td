@@ -1,5 +1,5 @@
 <template>
-  <div>gold: {{ Math.round(gold) }}</div>
+  <div>gold: {{ Math.round(player.gold) }}</div>
   <div class="d-flex justify-content-center mt-5">
     <div
       v-for="(fieldDivWidth, index) in fields"
@@ -76,6 +76,9 @@ import * as type from "@/types";
 export default defineComponent({
   data() {
     return {
+      player: {
+        gold: 100,
+      } as type.Player,
       mouse: {
         vector: [0, 0] as type.Vector,
       },
@@ -87,7 +90,6 @@ export default defineComponent({
       enemies: [] as type.Enemy[],
       gameStarted: false,
       gamelooptick: 0,
-      gold: 100,
       shopSize: 20,
       shopShow: false,
       shop1: {
@@ -196,7 +198,7 @@ export default defineComponent({
             this.enemies.findIndex((e) => e == enemy),
             1
           );
-          this.gold += enemy.maxHP / 10;
+          this.player.gold += enemy.maxHP / 10;
           this.createEnemy();
         }
       }
@@ -283,9 +285,9 @@ export default defineComponent({
                   this.middlePointRect(rect),
                   this.subVec(enemy.vector, enemy.size / 2)
                 )
-              ) < 150
+              ) < tower.tower!.range
             ) {
-              enemy.HP -= tower.dmg!;
+              enemy.HP -= tower.tower!.atk;
               break;
             }
           }
@@ -352,8 +354,8 @@ export default defineComponent({
     },
     //general
     checkPrice(price: number) {
-      if (price <= this.gold) {
-        this.gold -= price;
+      if (price <= this.player.gold) {
+        this.player.gold -= price;
         return true;
       }
       return false;
@@ -362,13 +364,28 @@ export default defineComponent({
       return { color: "grey", type: "way", id: id };
     },
     tower1(id: string) {
-      return { color: "blueviolet", type: "tower", id: id, dmg: 10 };
+      return {
+        color: "blueviolet",
+        type: "tower",
+        id: id,
+        tower: { atk: 10, range: 150, atkspeed: 1, atkrdy: true },
+      };
     },
     tower2(id: string) {
-      return { color: "darkorange", type: "tower", id: id, dmg: 10 };
+      return {
+        color: "darkorange",
+        type: "tower",
+        id: id,
+        tower: { atk: 10, range: 150, atkspeed: 1, atkrdy: true },
+      };
     },
     tower3(id: string) {
-      return { color: "aquamarine", type: "tower", id: id, dmg: 10 };
+      return {
+        color: "aquamarine",
+        type: "tower",
+        id: id,
+        tower: { atk: 10, range: 150, atkspeed: 1, atkrdy: true },
+      };
     },
     middlePointRect(rect: type.Rect) {
       return [
