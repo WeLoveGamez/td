@@ -19,6 +19,8 @@
       ></div>
     </div>
     <div
+      v-for="enemy of enemies"
+      :key="enemy"
       style="position: absolute; background-color: blue; border-radius: 50%"
       :style="{
         left: enemy.vector[0] + 'px',
@@ -29,39 +31,39 @@
     ></div>
   </div>
   <div
-    style="
-      background-color: blueviolet;
-      position: absolute;
-      height: 20px;
-      width: 20px;
-    "
-    :style="{ left: shop1.left + 'px', top: shop1.top + 'px' }"
+    style="background-color: blueviolet; position: absolute"
+    :style="{
+      left: shop1.left + 'px',
+      top: shop1.top + 'px',
+      height: shopSize + 'px',
+      width: shopSize + 'px',
+    }"
     @click="buildTower(shop1.position, 1)"
     v-if="shopShow"
   ></div>
   <div
-    style="
-      background-color: darkorange;
-      position: absolute;
-      height: 20px;
-      width: 20px;
-    "
-    :style="{ left: shop2.left + 'px', top: shop2.top + 'px' }"
+    style="background-color: darkorange; position: absolute"
+    :style="{
+      left: shop2.left + 'px',
+      top: shop2.top + 'px',
+      height: shopSize + 'px',
+      width: shopSize + 'px',
+    }"
     @click="buildTower(shop2.position, 2)"
     v-if="shopShow"
   ></div>
   <div
-    style="
-      background-color: aquamarine;
-      position: absolute;
-      height: 20px;
-      width: 20px;
-    "
-    :style="{ left: shop3.left + 'px', top: shop3.top + 'px' }"
+    style="background-color: aquamarine; position: absolute"
+    :style="{
+      left: shop3.left + 'px',
+      top: shop3.top + 'px',
+      height: shopSize + 'px',
+      width: shopSize + 'px',
+    }"
     @click="buildTower(shop3.position, 3)"
     v-if="shopShow"
   ></div>
-  <button class="btn btn-primary shadow-none me-1" @click="gameStarted = true">
+  <button class="btn btn-primary shadow-none me-1" @click="startGame()">
     gameLoop
   </button>
 </template>
@@ -82,19 +84,7 @@ export default defineComponent({
       fieldHeightAmout: 15,
       fields: [] as unknown as type.Fields,
       fieldHeight: [] as type.FieldDivs[],
-      enemy: {
-        vector: [428, 422],
-        maxHP: 100,
-        HP: 100,
-        size: 20,
-        movement: {
-          nextField: 0,
-          rect: "" as any as type.Rect,
-          fieldVec: [0, 0],
-          moveVec: [] as any as type.Vector,
-          counter: 0,
-        },
-      } as type.Enemy,
+      enemies: [] as type.Enemy[],
       gameStarted: false,
       gamelooptick: 0,
       gold: 100,
@@ -119,39 +109,12 @@ export default defineComponent({
   },
   async mounted() {
     await this.createField();
-    this.createEnemy();
-
     setInterval(() => {
       if (this.gameStarted) this.gameLoop();
     }, 1000 / 60);
   },
   components: {},
   methods: {
-    createEnemy() {
-      this.enemy.maxHP = 100;
-      this.enemy.HP = 100;
-      this.enemy.movement.counter = 0;
-      this.enemy.movement.rect = "" as any as type.Rect;
-      this.enemy.movement.moveVec = [] as any as type.Vector;
-      this.enemy.movement.nextField = 0;
-      this.enemy.movement.rect = document
-        .getElementById(`${this.enemy.movement.counter}|7`)!
-        .getBoundingClientRect();
-      this.enemy.vector = this.positionEnemeny(this.enemy);
-    },
-
-    gameLoop() {
-      this.moveEnemy();
-      this.checkEnemyLife();
-      if (this.gamelooptick % 60 == 0) this.towerAttack();
-      this.gamelooptick++;
-    },
-    checkEnemyLife() {
-      if (this.enemy.HP < 0) {
-        this.gold += this.enemy.maxHP / 10;
-        this.createEnemy();
-      }
-    },
     createField() {
       let type = "";
       let color = "";
@@ -196,61 +159,140 @@ export default defineComponent({
         `${pointer[0]}|${pointer[1]}`
       );
     },
-    moveEnemy() {
-      if (this.enemy.movement.counter < this.fieldWidthAmout) {
-        this.enemy.movement.nextField = this.fields[
-          this.enemy.movement.counter + 1
-        ].findIndex((f: any) => f.type == "way");
-
-        this.enemy.movement.rect = document
-          .getElementById(
-            `${this.enemy.movement.counter + 1}|${
-              this.enemy.movement.nextField
-            }`
-          )!
-          .getBoundingClientRect();
-
-        this.enemy.movement.fieldVec = this.positionEnemeny(this.enemy);
-
-        if (!this.enemy.movement.moveVec.length) {
-          this.enemy.movement.moveVec = this.mulVec(
-            this.dirVec(this.enemy.movement.fieldVec, this.enemy.vector),
-            0.05
+    gameLoop() {
+      this.moveEnemy();
+      this.checkEnemyLife();
+      if (this.gamelooptick % 60 == 0) this.towerAttack();
+      this.gamelooptick++;
+    },
+    startGame() {
+      this.gameStarted = true;
+      this.createEnemy();
+    },
+    //enemy
+    createEnemy() {
+      let enemy = {
+        vector: [428, 422],
+        maxHP: 100,
+        HP: 100,
+        size: 20,
+        movement: {
+          nextField: 0,
+          fieldVec: [0, 0],
+          moveVec: [] as any as type.Vector,
+          counter: 0,
+          rect: document
+            .getElementById(`0|7`)!
+            .getBoundingClientRect() as any as type.Rect,
+        },
+      } as type.Enemy;
+      enemy.vector = this.positionEnemeny(enemy);
+      this.enemies.push(enemy);
+    },
+    checkEnemyLife() {
+      for (let enemy of this.enemies) {
+        if (enemy.HP < 0) {
+          this.enemies.splice(
+            this.enemies.findIndex((e) => e == enemy),
+            1
           );
-        }
-        this.enemy.vector = this.addVec(
-          this.enemy.vector,
-          this.enemy.movement.moveVec
-        );
-
-        if (
-          this.lenVec(
-            this.dirVec(this.enemy.vector, this.enemy.movement.fieldVec)
-          ) < 1
-        ) {
-          this.enemy.movement.counter++;
-          this.enemy.movement.moveVec = [] as any as type.Vector;
+          this.gold += enemy.maxHP / 10;
+          this.createEnemy();
         }
       }
     },
-    towerAttack() {
-      for (let field of this.fields) {
-        for (let tower of field.filter((f) => f.type == "tower")) {
-          let rect = document.getElementById(tower.id)!.getBoundingClientRect();
+    moveEnemy() {
+      for (let enemy of this.enemies) {
+        if (enemy.movement.counter < this.fieldWidthAmout) {
+          enemy.movement.nextField = this.fields[
+            enemy.movement.counter + 1
+          ].findIndex((f: any) => f.type == "way");
+
+          enemy.movement.rect = document
+            .getElementById(
+              `${enemy.movement.counter + 1}|${enemy.movement.nextField}`
+            )!
+            .getBoundingClientRect();
+
+          enemy.movement.fieldVec = this.positionEnemeny(enemy);
+
+          if (!enemy.movement.moveVec.length) {
+            enemy.movement.moveVec = this.mulVec(
+              this.dirVec(enemy.movement.fieldVec, enemy.vector),
+              0.05
+            );
+          }
+          enemy.vector = this.addVec(enemy.vector, enemy.movement.moveVec);
+
           if (
-            this.lenVec(
-              this.subVec(
-                this.middlePointRect(rect),
-                this.subVec(this.enemy.vector, this.enemy.size / 2)
-              )
-            ) < 150
+            this.lenVec(this.dirVec(enemy.vector, enemy.movement.fieldVec)) < 1
           ) {
-            console.log(true);
-            this.enemy.HP -= 10;
+            enemy.movement.counter++;
+            enemy.movement.moveVec = [] as any as type.Vector;
           }
         }
       }
     },
+    //tower
+    buildTower(position: type.Vector, type: number) {
+      this.shopShow = false;
+      if (!this.checkPrice(20)) return;
+      switch (type) {
+        case 1:
+          this.fields[position[0]][position[1]] = this.tower1(
+            `${position[0]}|${position[1]}`
+          );
+          break;
+        case 2:
+          this.fields[position[0]][position[1]] = this.tower2(
+            `${position[0]}|${position[1]}`
+          );
+          break;
+        case 3:
+          this.fields[position[0]][position[1]] = this.tower3(
+            `${position[0]}|${position[1]}`
+          );
+          break;
+      }
+    },
+
+    towerAttack() {
+      for (let field of this.fields) {
+        for (let tower of field.filter((f) => f.type == "tower")) {
+          let rect = document.getElementById(tower.id)!.getBoundingClientRect();
+          this.enemies.sort((a, b) =>
+            this.lenVec(
+              this.subVec(
+                this.middlePointRect(rect),
+                this.subVec(a.vector, b.size / 2)
+              )
+            ) <
+            this.lenVec(
+              this.subVec(
+                this.middlePointRect(rect),
+                this.subVec(b.vector, b.size / 2)
+              )
+            )
+              ? 1
+              : -1
+          );
+          for (let enemy of this.enemies) {
+            if (
+              this.lenVec(
+                this.subVec(
+                  this.middlePointRect(rect),
+                  this.subVec(enemy.vector, enemy.size / 2)
+                )
+              ) < 150
+            ) {
+              enemy.HP -= tower.dmg!;
+              break;
+            }
+          }
+        }
+      }
+    },
+    //buildMenu
     openBuildMenu(index: number, index2: number, e: any) {
       this.shopShow = true;
       this.mouse.vector = [e.pageX, e.pageY];
@@ -271,6 +313,7 @@ export default defineComponent({
       this.shop3.top = shopArray[1] + 10;
       this.shop3.position = cklickedField;
     },
+    //clickField
     checkClickedField(index: number, index2: number) {
       if (this.checkField(index, index2)) {
         return [index, index2];
@@ -307,6 +350,7 @@ export default defineComponent({
         if (this.fields[index][index2].type != "way") return [index, index2];
       return false;
     },
+    //general
     checkPrice(price: number) {
       if (price <= this.gold) {
         this.gold -= price;
@@ -314,38 +358,17 @@ export default defineComponent({
       }
       return false;
     },
-    buildTower(position: type.Vector, type: number) {
-      this.shopShow = false;
-      if (!this.checkPrice(20)) return;
-      switch (type) {
-        case 1:
-          this.fields[position[0]][position[1]] = this.tower1(
-            `${position[0]}|${position[1]}`
-          );
-          break;
-        case 2:
-          this.fields[position[0]][position[1]] = this.tower2(
-            `${position[0]}|${position[1]}`
-          );
-          break;
-        case 3:
-          this.fields[position[0]][position[1]] = this.tower3(
-            `${position[0]}|${position[1]}`
-          );
-          break;
-      }
-    },
     wayField(id: string) {
       return { color: "grey", type: "way", id: id };
     },
     tower1(id: string) {
-      return { color: "blueviolet", type: "tower", id: id };
+      return { color: "blueviolet", type: "tower", id: id, dmg: 10 };
     },
     tower2(id: string) {
-      return { color: "darkorange", type: "tower", id: id };
+      return { color: "darkorange", type: "tower", id: id, dmg: 10 };
     },
     tower3(id: string) {
-      return { color: "aquamarine", type: "tower", id: id };
+      return { color: "aquamarine", type: "tower", id: id, dmg: 10 };
     },
     middlePointRect(rect: type.Rect) {
       return [
@@ -361,10 +384,6 @@ export default defineComponent({
     },
     positionEnemeny(enemy: type.Enemy) {
       return this.subVec(this.middlePointHexagon(enemy), enemy.size * 0.5 + 2);
-    },
-    //rnd
-    getRandomInt(max: number) {
-      return Math.floor(Math.random() * max);
     },
     percent(number: number, change: "in" | "de") {
       if (change == "in") {
@@ -383,6 +402,11 @@ export default defineComponent({
     ) {
       return this.lenVec(this.subVec(vector1, vector2)) < size1 / 2 + size2 / 2;
     },
+    //rnd
+    getRandomInt(max: number) {
+      return Math.floor(Math.random() * max);
+    },
+
     //Vector calculate
     addVec(vec1: type.Vector, vec2: type.Vector | number) {
       if (typeof vec2 == "number") {

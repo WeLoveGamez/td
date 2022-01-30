@@ -1,13 +1,14 @@
 export interface FieldDivs {
     color: string;
     type: string;
-    id: string
+    id: string;
+    dmg?: number;
 }
 export type Fields = [
 
     FieldDivs[]
 
-]
+];
 export type Vector = [number, number];
 
 export interface Enemy {
@@ -15,7 +16,7 @@ export interface Enemy {
     vector: Vector;
     maxHP: number;
     HP: number;
-    movement: Movement
+    movement: Movement;
 
 }
 export interface Movement {
@@ -26,10 +27,10 @@ export interface Movement {
     counter: number;
 }
 export interface Rect {
-    left: number
-    right: number
-    top: number
-    bottom: number
-    height: number
-    width: number
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    height: number;
+    width: number;
 }
