@@ -1,11 +1,7 @@
 <template>
   <div>gold: {{ Math.round(player.gold) }}</div>
   <div class="d-flex justify-content-center mt-5">
-    <div
-      v-for="(fieldDivWidth, index) in fields"
-      :key="fieldDivWidth"
-      :style="{ marginTop: index % 2 == 0 ? `${20}px` : 0 + 'px' }"
-    >
+    <div v-for="(fieldDivWidth, index) in fields" :key="fieldDivWidth" :style="{ marginTop: index % 2 == 0 ? `${20}px` : 0 + 'px' }">
       <div
         v-for="(fieldDivHeight, index2) in fieldDivWidth"
         :key="fieldDivHeight"
@@ -63,9 +59,7 @@
     @click="buildTower(shop3.position, 3)"
     v-if="shopShow"
   ></div>
-  <button class="btn btn-primary shadow-none me-1" @click="startGame()">
-    gameLoop
-  </button>
+  <button class="btn btn-primary shadow-none me-1" @click="startGame()">gameLoop</button>
 </template>
 
 <script lang="ts">
@@ -110,7 +104,7 @@ export default defineComponent({
     };
   },
   async mounted() {
-    await this.createField();
+    this.createField();
     setInterval(() => {
       if (this.gameStarted) this.gameLoop();
     }, 1000 / 60);
@@ -122,11 +116,7 @@ export default defineComponent({
       let color = "";
       for (let i = 0; i <= this.fieldWidthAmout; i++) {
         this.fieldHeight = [];
-        for (
-          let fieldHeighti = 0;
-          fieldHeighti < this.fieldHeightAmout;
-          fieldHeighti++
-        ) {
+        for (let fieldHeighti = 0; fieldHeighti < this.fieldHeightAmout; fieldHeighti++) {
           type = "empty";
           color = "green";
           this.fieldHeight.push({
@@ -138,9 +128,7 @@ export default defineComponent({
         this.fields.push(this.fieldHeight);
       }
       let pointer = [0, 7];
-      this.fields[pointer[0]][pointer[1]] = this.wayField(
-        `${pointer[0]}|${pointer[1]}`
-      );
+      this.fields[pointer[0]][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
       while (pointer[0] < this.fieldWidthAmout - 1) {
         switch (this.getRandomInt(2)) {
           case 0:
@@ -153,13 +141,9 @@ export default defineComponent({
             break;
         }
         pointer[0]++;
-        this.fields[pointer[0]][pointer[1]] = this.wayField(
-          `${pointer[0]}|${pointer[1]}`
-        );
+        this.fields[pointer[0]][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
       }
-      this.fields[pointer[0] + 1][pointer[1]] = this.wayField(
-        `${pointer[0]}|${pointer[1]}`
-      );
+      this.fields[pointer[0] + 1][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
     },
     gameLoop() {
       this.moveEnemy();
@@ -183,9 +167,7 @@ export default defineComponent({
           fieldVec: [0, 0],
           moveVec: [] as any as type.Vector,
           counter: 0,
-          rect: document
-            .getElementById(`0|7`)!
-            .getBoundingClientRect() as any as type.Rect,
+          rect: document.getElementById(`0|7`)!.getBoundingClientRect() as any as type.Rect,
         },
       } as type.Enemy;
       enemy.vector = this.positionEnemeny(enemy);
@@ -195,7 +177,7 @@ export default defineComponent({
       for (let enemy of this.enemies) {
         if (enemy.HP < 0) {
           this.enemies.splice(
-            this.enemies.findIndex((e) => e == enemy),
+            this.enemies.findIndex(e => e == enemy),
             1
           );
           this.player.gold += enemy.maxHP / 10;
@@ -206,29 +188,18 @@ export default defineComponent({
     moveEnemy() {
       for (let enemy of this.enemies) {
         if (enemy.movement.counter < this.fieldWidthAmout) {
-          enemy.movement.nextField = this.fields[
-            enemy.movement.counter + 1
-          ].findIndex((f: any) => f.type == "way");
+          enemy.movement.nextField = this.fields[enemy.movement.counter + 1].findIndex((f: any) => f.type == "way");
 
-          enemy.movement.rect = document
-            .getElementById(
-              `${enemy.movement.counter + 1}|${enemy.movement.nextField}`
-            )!
-            .getBoundingClientRect();
+          enemy.movement.rect = document.getElementById(`${enemy.movement.counter + 1}|${enemy.movement.nextField}`)!.getBoundingClientRect();
 
           enemy.movement.fieldVec = this.positionEnemeny(enemy);
 
           if (!enemy.movement.moveVec.length) {
-            enemy.movement.moveVec = this.mulVec(
-              this.dirVec(enemy.movement.fieldVec, enemy.vector),
-              0.05
-            );
+            enemy.movement.moveVec = this.mulVec(this.dirVec(enemy.movement.fieldVec, enemy.vector), 0.05);
           }
           enemy.vector = this.addVec(enemy.vector, enemy.movement.moveVec);
 
-          if (
-            this.lenVec(this.dirVec(enemy.vector, enemy.movement.fieldVec)) < 1
-          ) {
+          if (this.lenVec(this.dirVec(enemy.vector, enemy.movement.fieldVec)) < 1) {
             enemy.movement.counter++;
             enemy.movement.moveVec = [] as any as type.Vector;
           }
@@ -241,52 +212,29 @@ export default defineComponent({
       if (!this.checkPrice(20)) return;
       switch (type) {
         case 1:
-          this.fields[position[0]][position[1]] = this.tower1(
-            `${position[0]}|${position[1]}`
-          );
+          this.fields[position[0]][position[1]] = this.tower1(`${position[0]}|${position[1]}`);
           break;
         case 2:
-          this.fields[position[0]][position[1]] = this.tower2(
-            `${position[0]}|${position[1]}`
-          );
+          this.fields[position[0]][position[1]] = this.tower2(`${position[0]}|${position[1]}`);
           break;
         case 3:
-          this.fields[position[0]][position[1]] = this.tower3(
-            `${position[0]}|${position[1]}`
-          );
+          this.fields[position[0]][position[1]] = this.tower3(`${position[0]}|${position[1]}`);
           break;
       }
     },
 
     towerAttack() {
       for (let field of this.fields) {
-        for (let tower of field.filter((f) => f.type == "tower")) {
+        for (let tower of field.filter(f => f.type == "tower")) {
           let rect = document.getElementById(tower.id)!.getBoundingClientRect();
           this.enemies.sort((a, b) =>
-            this.lenVec(
-              this.subVec(
-                this.middlePointRect(rect),
-                this.subVec(a.vector, b.size / 2)
-              )
-            ) <
-            this.lenVec(
-              this.subVec(
-                this.middlePointRect(rect),
-                this.subVec(b.vector, b.size / 2)
-              )
-            )
+            this.lenVec(this.subVec(this.middlePointRect(rect), this.subVec(a.vector, b.size / 2))) <
+            this.lenVec(this.subVec(this.middlePointRect(rect), this.subVec(b.vector, b.size / 2)))
               ? 1
               : -1
           );
           for (let enemy of this.enemies) {
-            if (
-              this.lenVec(
-                this.subVec(
-                  this.middlePointRect(rect),
-                  this.subVec(enemy.vector, enemy.size / 2)
-                )
-              ) < tower.tower!.range
-            ) {
+            if (this.lenVec(this.subVec(this.middlePointRect(rect), this.subVec(enemy.vector, enemy.size / 2))) < tower.tower!.range) {
               enemy.HP -= tower.tower!.atk;
               break;
             }
@@ -298,22 +246,20 @@ export default defineComponent({
     openBuildMenu(index: number, index2: number, e: any) {
       this.shopShow = true;
       this.mouse.vector = [e.pageX, e.pageY];
-      let cklickedField = this.checkClickedField(index, index2) as type.Vector;
-      let rect = document
-        .getElementById(`${cklickedField[0]}|${cklickedField[1]}`)!
-        .getBoundingClientRect();
+      let clickedField = this.checkClickedField(index, index2) as type.Vector;
+      let rect = document.getElementById(`${clickedField[0]}|${clickedField[1]}`)!.getBoundingClientRect();
       let shopArray = this.middlePointRect(rect);
       shopArray[0] -= this.shopSize / 2 + 2;
       shopArray[1] -= this.hexagonSize - this.shopSize / 2;
       this.shop1.left = shopArray[0] - 25;
       this.shop1.top = shopArray[1] + 10;
-      this.shop1.position = cklickedField;
+      this.shop1.position = clickedField;
       this.shop2.left = shopArray[0];
       this.shop2.top = shopArray[1];
-      this.shop2.position = cklickedField;
+      this.shop2.position = clickedField;
       this.shop3.left = shopArray[0] + 25;
       this.shop3.top = shopArray[1] + 10;
-      this.shop3.position = cklickedField;
+      this.shop3.position = clickedField;
     },
     //clickField
     checkClickedField(index: number, index2: number) {
@@ -338,17 +284,8 @@ export default defineComponent({
     },
     checkField(index: number, index2: number) {
       if (index2 < 0) return;
-      let rect = document
-        .getElementById(`${index}|${index2}`)!
-        .getBoundingClientRect();
-      if (
-        this.collisionsCheck(
-          this.mouse.vector,
-          this.middlePointRect(rect),
-          22,
-          22
-        )
-      )
+      let rect = document.getElementById(`${index}|${index2}`)!.getBoundingClientRect();
+      if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22))
         if (this.fields[index][index2].type != "way") return [index, index2];
       return false;
     },
@@ -388,16 +325,10 @@ export default defineComponent({
       };
     },
     middlePointRect(rect: type.Rect) {
-      return [
-        rect.left + rect.width * 0.5,
-        rect.top + rect.height * 0.5,
-      ] as type.Vector;
+      return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector;
     },
     middlePointHexagon(enemy: type.Enemy) {
-      return [
-        enemy.movement.rect.left + enemy.movement.rect.width * 0.5,
-        enemy.movement.rect.top + enemy.movement.rect.height * 0.5,
-      ] as type.Vector;
+      return [enemy.movement.rect.left + enemy.movement.rect.width * 0.5, enemy.movement.rect.top + enemy.movement.rect.height * 0.5] as type.Vector;
     },
     positionEnemeny(enemy: type.Enemy) {
       return this.subVec(this.middlePointHexagon(enemy), enemy.size * 0.5 + 2);
@@ -411,12 +342,7 @@ export default defineComponent({
       }
       return 1;
     },
-    collisionsCheck(
-      vector1: type.Vector,
-      vector2: type.Vector,
-      size1: number,
-      size2: number
-    ) {
+    collisionsCheck(vector1: type.Vector, vector2: type.Vector, size1: number, size2: number) {
       return this.lenVec(this.subVec(vector1, vector2)) < size1 / 2 + size2 / 2;
     },
     //rnd

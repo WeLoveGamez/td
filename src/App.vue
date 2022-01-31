@@ -1,7 +1,8 @@
 <template>
   <div id="nav">
-    <router-link to="/game">Game</router-link> |
-    <router-link to="/about">About</router-link>
+    <router-link to="/game">Game</router-link>
+    |
+    <router-link to="/Mapbuilder">MapBuilder</router-link>
   </div>
   <router-view />
 </template>
@@ -12,15 +13,18 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #ffffff;
+  background-color: #2a2a35;
+  height: 100vh;
 }
 
 #nav {
-  padding: 30px;
-
+  padding: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid black;
   a {
     font-weight: bold;
-    color: #2c3e50;
+    color: #ffffff;
 
     &.router-link-exact-active {
       color: #42b983;
