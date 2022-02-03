@@ -3,7 +3,8 @@ export interface FieldDivs {
   type: string;
   id: string;
   tower?: Tower;
-  pathNumber?: number;
+  start?: boolean;
+  finish?: boolean;
 }
 export interface Tower {
   atk: number;
@@ -45,4 +46,3 @@ export interface ShopOption {
   left: number;
   color: string;
 }
-export interface path {}

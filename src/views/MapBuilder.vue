@@ -13,17 +13,9 @@
         FieldHeight:
         <input type="number" v-model="fieldHeight" max="20" @change="renderField()" />
       </div>
-      <div class="d-flex align-items-center justify-content-center">
-        <label class="">Auto Generate Path</label>
-        <input
-          class="btn btn-info mb-1 ms-2"
-          type="checkbox"
-          @change="
-            autoPath = !autoPath;
-            generatePath();
-          "
-        />
-      </div>
+      <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath()">Auto Generate Path</button>
+      <button class="btn btn-info mb-1 ms-2" @click.stop="rerenderField('clear')">clear</button>
+      <button class="btn btn-info mb-1 ms-2" @click.stop="rerenderField('pathClear')">pathClear</button>
     </div>
     <div class="row col-12">
       <div class="d-flex flex-column mt-5 p-0" style="width: 7%">
@@ -66,7 +58,9 @@
             class="hex"
             :id="xIndex + '|' + yIndex + ''"
             @click.stop="openBuildMenu(xIndex, yIndex, $event)"
-          ></div>
+          >
+            <!-- <div><i class="far fa-flag" style="color: red"></i></div> -->
+          </div>
         </div>
       </div>
     </div>
@@ -135,23 +129,29 @@ export default defineComponent({
   components: {},
   methods: {
     rerenderField(action: "clear" | "pathClear") {
-      for (let row = 0; row < this.fieldWidth; row++) {
-        let fieldRows = [] as type.FieldDivs[];
-        for (let hex = 0; hex < this.fieldHeight; hex++) {
-          switch (action) {
-            case "clear":
+      switch (action) {
+        case "clear":
+          this.field = [] as unknown as type.Fields;
+          for (let row = 0; row <= this.fieldWidth; row++) {
+            let fieldRow = [];
+            for (let hex = 0; hex < this.fieldHeight; hex++) {
               console.log("test");
-              fieldRows.push({
+              fieldRow.push({
                 color: this.Options.find(o => o.type == "gras")!.color,
                 type: "gras",
                 id: `${row}|${hex}`,
               });
-              this.field.push(fieldRows);
-              break;
-            case "pathClear":
-              break;
+            }
+            this.field.push(fieldRow);
           }
-        }
+          break;
+        case "pathClear":
+          for (let row = 0; row <= this.fieldWidth; row++) {
+            for (let hex = 0; hex < this.fieldHeight; hex++) {
+              this.field[row][hex].type == "path" ? (this.field[row][hex] = { id: `${row}${hex}`, type: "gras", color: "#008000" }) : null;
+            }
+          }
+          break;
       }
     },
     renderField() {
@@ -174,7 +174,7 @@ export default defineComponent({
       if (this.autoPath) this.generatePath();
     },
     generatePath() {
-      if (!this.autoPath) return;
+      this.rerenderField("pathClear");
       let pointer = [0, 7];
       this.field[pointer[0]][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
       while (pointer[0] < this.fieldWidth - 1) {
