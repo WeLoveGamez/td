@@ -121,11 +121,11 @@ export default defineComponent({
       },
       Options: [
         { type: "path", color: "#555555", top: 7, left: -25 },
-        { type: "gras", color: "#008000", top: -2, left: 0 },
+        // { type: "", color: "#008000", top: -2, left: 0 },
         { type: "water", color: "#0000FF", top: 7, left: 25 },
         { type: "hill", color: "#754c00", top: 46, left: -25 },
-        // { type: "", color: "#00DD00", top: 56, left: 0 },
-        // { type: "", color: "#0000FF", top: 46, left: 25 },
+        // { type: "", color: "#008000", top: 56, left: 0 },
+        { type: "gras", color: "#008000", top: 46, left: 25 },
       ] as type.ShopOption[],
     };
   },
