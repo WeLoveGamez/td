@@ -13,7 +13,7 @@ const routes: Array<RouteRecordRaw> = [
     component: Game,
   },
   {
-    path: "/",
+    path: "/login",
     name: "Login",
     component: Login,
   },
@@ -54,7 +54,7 @@ const getCurrentUser = () => {
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   if (!(await getCurrentUser()) && requiresAuth) {
-    next("/");
+    next("/login");
   } else {
     next();
   }

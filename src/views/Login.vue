@@ -43,10 +43,10 @@ export default defineComponent({
       this.loggingIn = true;
       try {
         await API.login(this.email, this.password);
-        console.log("admin logged in with:" + this.email);
+        console.log("logged in with:" + this.email);
         this.email = "";
         this.password = "";
-        this.$router.push("/");
+        this.$router.push("/game");
       } catch (e) {
         console.error({ "couldn't login": e });
       } finally {

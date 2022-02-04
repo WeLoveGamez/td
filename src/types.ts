@@ -1,4 +1,4 @@
-export interface FieldDivs {
+export interface FieldDiv {
   color: string;
   type: string;
   id: string;
@@ -12,7 +12,7 @@ export interface Tower {
   atkrdy: boolean;
   range: number;
 }
-export type Fields = [FieldDivs[]];
+export type Fields = [FieldDiv[]];
 export type Vector = [number, number];
 
 export interface Enemy {

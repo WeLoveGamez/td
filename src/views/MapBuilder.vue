@@ -1,5 +1,6 @@
 <template>
-  <div @click="shopShow = false">
+  <Navbar></Navbar>
+  <div @click="shopShow = false" style="height: 100vh">
     <div class="d-flex mx-5 justify-content-around">
       <div>
         gold:
@@ -7,15 +8,17 @@
       </div>
       <div>
         FieldWidth:
-        <input type="number" v-model="fieldWidth" max="50" @change="renderField()" />
+        <input type="number" v-model="fieldWidth" max="50" min="3" @change="renderField('clear')" />
       </div>
       <div>
         FieldHeight:
-        <input type="number" v-model="fieldHeight" max="20" @change="renderField()" />
+        <input type="number" v-model="fieldHeight" max="20" min="3" @change="renderField('clear')" />
       </div>
-      <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath()">Auto Generate Path</button>
-      <button class="btn btn-info mb-1 ms-2" @click.stop="rerenderField('clear')">clear</button>
-      <button class="btn btn-info mb-1 ms-2" @click.stop="rerenderField('pathClear')">pathClear</button>
+      <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath('basic')">Auto generate basic path</button>
+      <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath('complex')">Auto generate complex path</button>
+      <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="massGenerate()">Generate distribution</button>
+      <button class="btn btn-info mb-1 ms-2" @click.stop="renderField('clear')">clear</button>
+      <button class="btn btn-info mb-1 ms-2" @click.stop="renderField('pathClear')">pathClear</button>
     </div>
     <div class="row col-12">
       <div class="d-flex flex-column mt-5 p-0" style="width: 7%">
@@ -85,9 +88,11 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import Navbar from "@/components/Navbar.vue";
 import * as type from "@/types";
 
 export default defineComponent({
+  components: { Navbar },
   data() {
     return {
       //startingConditions
@@ -103,7 +108,9 @@ export default defineComponent({
       fieldWidth: 30,
       fieldHeight: 15,
 
-      autoPath: false,
+      path: [] as type.FieldDiv[],
+
+      generating: false,
 
       //shop
       shopSize: 20,
@@ -124,18 +131,16 @@ export default defineComponent({
     };
   },
   async mounted() {
-    this.renderField();
+    this.renderField("clear");
   },
-  components: {},
   methods: {
-    rerenderField(action: "clear" | "pathClear") {
+    renderField(action: "clear" | "pathClear") {
       switch (action) {
         case "clear":
           this.field = [] as unknown as type.Fields;
-          for (let row = 0; row <= this.fieldWidth; row++) {
+          for (let row = 0; row < this.fieldWidth; row++) {
             let fieldRow = [];
             for (let hex = 0; hex < this.fieldHeight; hex++) {
-              console.log("test");
               fieldRow.push({
                 color: this.Options.find(o => o.type == "gras")!.color,
                 type: "gras",
@@ -146,7 +151,7 @@ export default defineComponent({
           }
           break;
         case "pathClear":
-          for (let row = 0; row <= this.fieldWidth; row++) {
+          for (let row = 0; row < this.fieldWidth; row++) {
             for (let hex = 0; hex < this.fieldHeight; hex++) {
               this.field[row][hex].type == "path" ? (this.field[row][hex] = { id: `${row}${hex}`, type: "gras", color: "#008000" }) : null;
             }
@@ -154,44 +159,148 @@ export default defineComponent({
           break;
       }
     },
-    renderField() {
-      this.field = [] as unknown as type.Fields;
-      let type = "";
-      let color = "";
-      for (let i = 0; i <= this.fieldWidth; i++) {
-        let fieldRows = [];
-        for (let fieldHeighti = 0; fieldHeighti < this.fieldHeight; fieldHeighti++) {
-          type = "empty";
-          color = "green";
-          fieldRows.push({
-            color: color,
-            type: type,
-            id: `${i}|${fieldHeighti}`,
-          });
-        }
-        this.field.push(fieldRows);
+    massGenerate() {
+      for (let i = 0; i < 50; i++) {
+        this.generatePath("basic", false);
       }
-      if (this.autoPath) this.generatePath();
     },
-    generatePath() {
-      this.rerenderField("pathClear");
-      let pointer = [0, 7];
-      this.field[pointer[0]][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
-      while (pointer[0] < this.fieldWidth - 1) {
-        switch (this.getRandomInt(2)) {
-          case 0:
-            if (pointer[0] % 2 == 0) pointer[1]++;
-            if (pointer[1] > 14) pointer[1]--;
-            break;
-          case 1:
-            if (pointer[0] % 2 != 0) pointer[1]--;
-            if (pointer[1] < 0) pointer[1]++;
-            break;
-        }
-        pointer[0]++;
-        this.field[pointer[0]][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
+    generatePath(type: "basic" | "complex", clear?: boolean) {
+      let counter = 0;
+      let pointer = [0, this.getRandomInt(this.fieldHeight)];
+      this.path = [];
+      this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false));
+      this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
+
+      switch (type) {
+        case "basic":
+          if (clear !== false) this.renderField("pathClear");
+          this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
+          while (pointer[0] < this.fieldWidth - 2) {
+            switch (this.getRandomInt(2)) {
+              case 0:
+                if (pointer[0] % 2 == 0) pointer[1]++;
+                if (pointer[1] == this.fieldHeight) pointer[1]--;
+                break;
+              case 1:
+                if (pointer[0] % 2 != 0) pointer[1]--;
+                if (pointer[1] < 0) pointer[1]++;
+                break;
+            }
+            pointer[0]++;
+            this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false);
+          }
+          this.field[pointer[0] + 1][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true);
+          break;
+
+        case "complex":
+          // gehe auf eins der erlaubten felder zufällig while not finished
+          this.renderField("pathClear");
+
+          this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
+          while (pointer[0] < this.fieldWidth - 1 && counter < 1000) {
+            counter++;
+            switch (this.getRandomInt(6)) {
+              case 0:
+                if (this.checkNeighbourFields(pointer[0], pointer[1] - 1)) pointer[1]--;
+                break;
+              case 1:
+                if (this.checkNeighbourFields(pointer[0], pointer[1] + 1)) pointer[1]++;
+                break;
+              case 2:
+                if (pointer[0] % 2 == 0) {
+                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1])) pointer[0]--;
+                } else {
+                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1] - 1)) {
+                    pointer[0]--;
+                    pointer[1]--;
+                  }
+                }
+                break;
+              case 3:
+                if (pointer[0] % 2 == 0) {
+                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1] + 1)) {
+                    pointer[0]--;
+                    pointer[1]++;
+                  }
+                } else {
+                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1])) pointer[0]--;
+                }
+                break;
+              case 4:
+                if (pointer[0] % 2 == 0) {
+                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1])) pointer[0]++;
+                } else {
+                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1] - 1)) {
+                    pointer[0]++;
+                    pointer[1]--;
+                  }
+                }
+                break;
+              case 5:
+                if (pointer[0] % 2 == 0) {
+                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1] + 1)) {
+                    pointer[0]++;
+                    pointer[1]++;
+                  }
+                } else {
+                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1])) pointer[0]++;
+                }
+                break;
+            }
+
+            this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false);
+            this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false));
+          }
+          this.path[this.path.length - 1] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true);
+          this.path.length < 15 ? this.generatePath("complex") : null;
+
+          break;
       }
-      this.field[pointer[0] + 1][pointer[1]] = this.wayField(`${pointer[0]}|${pointer[1]}`);
+    },
+    checkNeighbourFields(x: number, y: number) {
+      // alle umliegenden felder prüfen ob sie type.path sind wenn 1 return true wenn mehr oder 0 return false
+      if (x < 0 || y < 0 || x > this.fieldWidth - 1 || y > this.fieldHeight - 1) return;
+      let found = [];
+      if (y > 0 && this.field[x][y - 1].type == "path") {
+        found.push(this.field[x][y - 1]);
+      }
+      if (y < this.fieldHeight - 1 && this.field[x][y + 1].type == "path") {
+        found.push(this.field[x][y + 1]);
+      }
+      switch (x % 2) {
+        case 0:
+          if (x > 0 && this.field[x - 1][y].type == "path") {
+            found.push(this.field[x - 1][y]);
+          }
+          if (x > 0 && y < this.fieldHeight - 1 && this.field[x - 1][y + 1].type == "path") {
+            found.push(this.field[x - 1][y + 1]);
+          }
+          if (x < this.fieldWidth - 1 && this.field[x + 1][y].type == "path") {
+            found.push(this.field[x + 1][y]);
+          }
+          if (x < this.fieldWidth - 1 && y < this.fieldHeight - 1 && this.field[x + 1][y + 1].type == "path") {
+            found.push(this.field[x + 1][y + 1]);
+          }
+          break;
+
+        case 1:
+          if (x > 0 && y > 0 && this.field[x - 1][y - 1].type == "path") {
+            found.push(this.field[x - 1][y - 1]);
+          }
+          if (x > 0 && this.field[x - 1][y].type == "path") {
+            found.push(this.field[x - 1][y]);
+          }
+          if (x < this.fieldWidth - 1 && y > 0 && this.field[x + 1][y - 1].type == "path") {
+            found.push(this.field[x + 1][y - 1]);
+          }
+          if (x < this.fieldWidth - 1 && this.field[x + 1][y].type == "path") {
+            found.push(this.field[x + 1][y]);
+          }
+      }
+      return found.length == 1 ? true : false;
+    },
+    getPathIndeces(pathTile: type.FieldDiv): number[] {
+      return pathTile.id.split("|").map(n => parseInt(n));
     },
     clearPath() {
       this.field.forEach(row =>
@@ -215,7 +324,6 @@ export default defineComponent({
     },
     //mapEditing
     changeHex(xIndex: number, yIndex: number, type: "path" | "gras" | "water" | "hill") {
-      console.log("changeHexType:", { hex: xIndex, yIndex }, { type });
       this.field[xIndex][yIndex].type = type;
       this.field[xIndex][yIndex].color = this.Options.find(o => o.type == type)!.color;
     },
@@ -244,13 +352,11 @@ export default defineComponent({
       if (yIndex < 0) return;
       if (xIndex < 0) return;
       let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect();
-      if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22))
-        if (this.field[xIndex][yIndex].type != "path") return [xIndex, yIndex];
-      return false;
+      if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22)) return [xIndex, yIndex];
     },
     //general
-    wayField(id: string) {
-      return { color: this.Options[0].color, type: "path", id: id };
+    pathfield(id: string, start: boolean, finish: boolean): type.FieldDiv {
+      return { color: this.Options[0].color, type: "path", id: id, start: start, finish: finish };
     },
     middlePointRect(rect: type.Rect) {
       return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector;

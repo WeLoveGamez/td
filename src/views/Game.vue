@@ -1,4 +1,6 @@
 <template>
+  <Navbar></Navbar>
+
   <div>gold: {{ Math.round(player.gold) }}</div>
   <div class="d-flex justify-content-center mt-5">
     <div v-for="(fieldDivWidth, index) in fields" :key="fieldDivWidth" :style="{ marginTop: index % 2 == 0 ? `${20}px` : 0 + 'px' }">
@@ -66,8 +68,11 @@
 import { defineComponent } from "vue";
 // import * as API from "@/API";
 import * as type from "@/types";
+import Navbar from "@/components/Navbar.vue";
 
 export default defineComponent({
+  components: { Navbar },
+
   data() {
     return {
       player: {
@@ -80,7 +85,7 @@ export default defineComponent({
       fieldWidthAmout: 30,
       fieldHeightAmout: 15,
       fields: [] as unknown as type.Fields,
-      fieldHeight: [] as type.FieldDivs[],
+      fieldHeight: [] as type.FieldDiv[],
       enemies: [] as type.Enemy[],
       gameStarted: false,
       gamelooptick: 0,
@@ -109,7 +114,6 @@ export default defineComponent({
       if (this.gameStarted) this.gameLoop();
     }, 1000 / 60);
   },
-  components: {},
   methods: {
     createField() {
       let type = "";
