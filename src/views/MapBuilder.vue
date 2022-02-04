@@ -170,6 +170,7 @@ export default defineComponent({
       this.path = [];
       this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false));
       this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
+      let pointerNeighbours = [];
 
       switch (type) {
         case "basic":
@@ -195,109 +196,51 @@ export default defineComponent({
         case "complex":
           // gehe auf eins der erlaubten felder zufällig while not finished
           this.renderField("pathClear");
-
           this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
-          while (pointer[0] < this.fieldWidth - 1 && counter < 1000) {
-            counter++;
-            switch (this.getRandomInt(6)) {
-              case 0:
-                if (this.checkNeighbourFields(pointer[0], pointer[1] - 1)) pointer[1]--;
-                break;
-              case 1:
-                if (this.checkNeighbourFields(pointer[0], pointer[1] + 1)) pointer[1]++;
-                break;
-              case 2:
-                if (pointer[0] % 2 == 0) {
-                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1])) pointer[0]--;
-                } else {
-                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1] - 1)) {
-                    pointer[0]--;
-                    pointer[1]--;
-                  }
-                }
-                break;
-              case 3:
-                if (pointer[0] % 2 == 0) {
-                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1] + 1)) {
-                    pointer[0]--;
-                    pointer[1]++;
-                  }
-                } else {
-                  if (this.checkNeighbourFields(pointer[0] - 1, pointer[1])) pointer[0]--;
-                }
-                break;
-              case 4:
-                if (pointer[0] % 2 == 0) {
-                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1])) pointer[0]++;
-                } else {
-                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1] - 1)) {
-                    pointer[0]++;
-                    pointer[1]--;
-                  }
-                }
-                break;
-              case 5:
-                if (pointer[0] % 2 == 0) {
-                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1] + 1)) {
-                    pointer[0]++;
-                    pointer[1]++;
-                  }
-                } else {
-                  if (this.checkNeighbourFields(pointer[0] + 1, pointer[1])) pointer[0]++;
-                }
-                break;
-            }
+          pointerNeighbours = this.checkNeighbourFields(pointer[0], pointer[1], "gras") as type.FieldDiv[];
+          console.log({ pointerNeighbours });
+          for (let neighbour of pointerNeighbours) {
+            let cords = this.getPathIndeces(neighbour);
+            let chosenFields = this.checkNeighbourFields(cords[0], cords[1], "path");
+            let random = this.getRandomInt(chosenFields.length - 1);
 
-            this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false);
-            this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false));
+            this.field[pointer[0]][pointer[1]] = chosenFields[random];
+            this.path.push(chosenFields[random]);
           }
-          this.path[this.path.length - 1] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true);
-          this.path.length < 15 ? this.generatePath("complex") : null;
-
           break;
       }
     },
-    checkNeighbourFields(x: number, y: number) {
-      // alle umliegenden felder prüfen ob sie type.path sind wenn 1 return true wenn mehr oder 0 return false
-      if (x < 0 || y < 0 || x > this.fieldWidth - 1 || y > this.fieldHeight - 1) return;
+    checkNeighbourFields(x: number, y: number, type: string) {
+      let neighbours0 = [
+        { dir: "up", x: 0, y: -1 },
+        { dir: "down", x: 0, y: 1 },
+        { dir: "upright", x: 1, y: 0 },
+        { dir: "downright", x: 1, y: 1 },
+        { dir: "upleft", x: -1, y: 0 },
+        { dir: "downleft", x: -1, y: 1 },
+      ];
+      let neighbours1 = [
+        { dir: "up", x: 0, y: -1 },
+        { dir: "down", x: 0, y: 1 },
+        { dir: "upright", x: 1, y: -1 },
+        { dir: "downright", x: 1, y: 0 },
+        { dir: "upleft", x: -1, y: -1 },
+        { dir: "downleft", x: -1, y: 0 },
+      ];
+      let neighbours = [];
+      neighbours = x % 2 == 0 ? neighbours0 : neighbours1;
+      if (x < 0 || y < 0 || x > this.fieldWidth - 1 || y > this.fieldHeight - 1) return [];
+      if (this.field[x][y].type == type) return [];
       let found = [];
-      if (y > 0 && this.field[x][y - 1].type == "path") {
-        found.push(this.field[x][y - 1]);
+      for (let neighbour of neighbours) {
+        let targetX = x + neighbour.x;
+        let targetY = y + neighbour.y;
+        if (targetX >= 0 && targetY >= 0 && targetX <= this.fieldWidth - 1 && targetY <= this.fieldHeight - 1) {
+          if (this.field[targetX][targetY].type == type) found.push(this.field[targetX][targetY]);
+        }
       }
-      if (y < this.fieldHeight - 1 && this.field[x][y + 1].type == "path") {
-        found.push(this.field[x][y + 1]);
-      }
-      switch (x % 2) {
-        case 0:
-          if (x > 0 && this.field[x - 1][y].type == "path") {
-            found.push(this.field[x - 1][y]);
-          }
-          if (x > 0 && y < this.fieldHeight - 1 && this.field[x - 1][y + 1].type == "path") {
-            found.push(this.field[x - 1][y + 1]);
-          }
-          if (x < this.fieldWidth - 1 && this.field[x + 1][y].type == "path") {
-            found.push(this.field[x + 1][y]);
-          }
-          if (x < this.fieldWidth - 1 && y < this.fieldHeight - 1 && this.field[x + 1][y + 1].type == "path") {
-            found.push(this.field[x + 1][y + 1]);
-          }
-          break;
 
-        case 1:
-          if (x > 0 && y > 0 && this.field[x - 1][y - 1].type == "path") {
-            found.push(this.field[x - 1][y - 1]);
-          }
-          if (x > 0 && this.field[x - 1][y].type == "path") {
-            found.push(this.field[x - 1][y]);
-          }
-          if (x < this.fieldWidth - 1 && y > 0 && this.field[x + 1][y - 1].type == "path") {
-            found.push(this.field[x + 1][y - 1]);
-          }
-          if (x < this.fieldWidth - 1 && this.field[x + 1][y].type == "path") {
-            found.push(this.field[x + 1][y]);
-          }
-      }
-      return found.length == 1 ? true : false;
+      return found;
     },
     getPathIndeces(pathTile: type.FieldDiv): number[] {
       return pathTile.id.split("|").map(n => parseInt(n));
