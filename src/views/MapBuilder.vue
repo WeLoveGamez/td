@@ -1,6 +1,6 @@
 <template>
   <Navbar></Navbar>
-  <div @click="shopShow = false" style="height: 100vh">
+  <div @click="shopShow = false" class="flex-1">
     <div class="d-flex mx-5 justify-content-around">
       <div>
         gold:
@@ -14,9 +14,12 @@
         FieldHeight:
         <input type="number" v-model="fieldHeight" max="20" min="3" @change="renderField('clear')" />
       </div>
+      <div>
+        MinPathLength:
+        <input type="number" v-model="pathLength" :max="(fieldHeight * fieldWidth) / 3" min="0" @change="generatePath('complex')" />
+      </div>
       <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath('basic')">Auto generate basic path</button>
       <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath('complex')">Auto generate complex path</button>
-      <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="massGenerate()">Generate distribution</button>
       <button class="btn btn-info mb-1 ms-2" @click.stop="renderField('clear')">clear</button>
       <button class="btn btn-info mb-1 ms-2" @click.stop="renderField('pathClear')">pathClear</button>
     </div>
@@ -55,7 +58,7 @@
             v-for="(hex, yIndex) in row"
             :key="JSON.stringify(hex)"
             :style="{
-              color: hex.color,
+              color: hex?.color,
               fontSize: `${hexagonSize}px`,
             }"
             class="hex"
@@ -64,6 +67,7 @@
           >
             <!-- <div><i class="far fa-flag" style="color: red"></i></div> -->
           </div>
+          <!-- {{ row }} -->
         </div>
       </div>
     </div>
@@ -109,6 +113,8 @@ export default defineComponent({
       fieldHeight: 15,
 
       path: [] as type.FieldDiv[],
+      pathLength: 30,
+      counter: 0,
 
       generating: false,
 
@@ -132,6 +138,7 @@ export default defineComponent({
   },
   async mounted() {
     this.renderField("clear");
+    this.counter = 0;
   },
   methods: {
     renderField(action: "clear" | "pathClear") {
@@ -142,7 +149,7 @@ export default defineComponent({
             let fieldRow = [];
             for (let hex = 0; hex < this.fieldHeight; hex++) {
               fieldRow.push({
-                color: this.Options.find(o => o.type == "gras")!.color,
+                color: "#008000",
                 type: "gras",
                 id: `${row}|${hex}`,
               });
@@ -153,7 +160,7 @@ export default defineComponent({
         case "pathClear":
           for (let row = 0; row < this.fieldWidth; row++) {
             for (let hex = 0; hex < this.fieldHeight; hex++) {
-              this.field[row][hex].type == "path" ? (this.field[row][hex] = { id: `${row}${hex}`, type: "gras", color: "#008000" }) : null;
+              if (this.field[row][hex].type == "path") this.field[row][hex] = { id: `${row}|${hex}`, type: "gras", color: "#008000" };
             }
           }
           break;
@@ -164,12 +171,10 @@ export default defineComponent({
         this.generatePath("basic", false);
       }
     },
-    generatePath(type: "basic" | "complex", clear?: boolean) {
-      let counter = 0;
-      let pointer = [0, this.getRandomInt(this.fieldHeight)];
+    async generatePath(type: "basic" | "complex", clear?: boolean) {
+      let pointer = [0, this.getRandomInt(this.fieldHeight - 1)];
       this.path = [];
       this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false));
-      this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
       let pointerNeighbours = [];
 
       switch (type) {
@@ -194,23 +199,43 @@ export default defineComponent({
           break;
 
         case "complex":
-          // gehe auf eins der erlaubten felder zufällig while not finished
           this.renderField("pathClear");
           this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false);
-          pointerNeighbours = this.checkNeighbourFields(pointer[0], pointer[1], "gras") as type.FieldDiv[];
-          console.log({ pointerNeighbours });
-          for (let neighbour of pointerNeighbours) {
-            let cords = this.getPathIndeces(neighbour);
-            let chosenFields = this.checkNeighbourFields(cords[0], cords[1], "path");
-            let random = this.getRandomInt(chosenFields.length - 1);
+          console.log({ field: this.field });
+          while (pointer[0] < this.fieldWidth - 1) {
+            let validPointerNeighbours = [];
+            pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], "gras"); //get all near fields of type gras
+            console.log({ gras: pointerNeighbours });
+            for (let neighbour of pointerNeighbours) {
+              let cords = this.getPathIndeces(neighbour);
+              let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], "path");
+              console.log({ cords, path: neighboursPaths });
 
-            this.field[pointer[0]][pointer[1]] = chosenFields[random];
-            this.path.push(chosenFields[random]);
+              if (neighboursPaths.length == 1) validPointerNeighbours.push(neighbour);
+            }
+            console.log({ validPointerNeighbours });
+            if (validPointerNeighbours.length == 0) break;
+            let random = this.getRandomInt(validPointerNeighbours.length - 1);
+            let nextPath = validPointerNeighbours[random];
+            let nextCords = this.getPathIndeces(nextPath);
+            this.field[nextCords[0]][nextCords[1]] = this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false);
+            this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false));
+            pointer = nextCords;
           }
-          break;
+          if (this.path.length < this.pathLength && this.counter < 1000) {
+            console.log("newPath");
+            this.counter++;
+            this.generatePath("complex");
+          }
       }
     },
-    checkNeighbourFields(x: number, y: number, type: string) {
+    applyPath() {
+      this.path.forEach(h => {
+        let hex = this.pathfield(`${this.getPathIndeces(h)[0]}|${this.getPathIndeces(h)[1]}`, true, false);
+        this.field[this.getPathIndeces(h)[0]][this.getPathIndeces(h)[1]] = hex;
+      });
+    },
+    findNeighbourFields(x: number, y: number, type: string) {
       let neighbours0 = [
         { dir: "up", x: 0, y: -1 },
         { dir: "down", x: 0, y: 1 },
@@ -229,21 +254,23 @@ export default defineComponent({
       ];
       let neighbours = [];
       neighbours = x % 2 == 0 ? neighbours0 : neighbours1;
-      if (x < 0 || y < 0 || x > this.fieldWidth - 1 || y > this.fieldHeight - 1) return [];
-      if (this.field[x][y].type == type) return [];
+      // if (this.field[x][y].type == "path") return [];
       let found = [];
       for (let neighbour of neighbours) {
         let targetX = x + neighbour.x;
         let targetY = y + neighbour.y;
-        if (targetX >= 0 && targetY >= 0 && targetX <= this.fieldWidth - 1 && targetY <= this.fieldHeight - 1) {
-          if (this.field[targetX][targetY].type == type) found.push(this.field[targetX][targetY]);
-        }
+        console.log({ targetX, targetY });
+        if (
+          !(targetX < 0 || targetY < 0 || targetX > this.fieldWidth - 1 || targetY > this.fieldHeight - 1) &&
+          this.field[targetX][targetY].type == type
+        )
+          found.push(this.field[targetX][targetY]);
+        console.log({ x, y, neighbour });
       }
-
       return found;
     },
     getPathIndeces(pathTile: type.FieldDiv): number[] {
-      return pathTile.id.split("|").map(n => parseInt(n));
+      return pathTile?.id.split("|").map(n => parseInt(n));
     },
     clearPath() {
       this.field.forEach(row =>
@@ -321,7 +348,7 @@ export default defineComponent({
     },
     //rnd
     getRandomInt(max: number) {
-      return Math.floor(Math.random() * max);
+      return Math.round(Math.random() * max);
     },
 
     //Vector calculate
