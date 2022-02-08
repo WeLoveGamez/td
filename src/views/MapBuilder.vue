@@ -113,6 +113,7 @@ export default defineComponent({
       fieldHeight: 15,
 
       path: [] as type.FieldDiv[],
+      longestPath :as type.FieldDiv[],
       pathLength: 30,
       counter: 0,
 
@@ -222,10 +223,15 @@ export default defineComponent({
             this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false));
             pointer = nextCords;
           }
+          if(this.longestPath.length < this.path.length) this.longestPath = this.path;
           if (this.path.length < this.pathLength && this.counter < 1000) {
             console.log("newPath");
             this.counter++;
             this.generatePath("complex");
+          }else{
+            this.path = this.longestPath
+            this.renderField("pathClear");
+            this.applyPath();
           }
       }
     },
