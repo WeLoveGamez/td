@@ -22,6 +22,10 @@
       <button class="btn btn-info mb-1 ms-2" type="button" @click.stop="generatePath('complex')">Auto generate complex path</button>
       <button class="btn btn-info mb-1 ms-2" @click.stop="renderField('clear')">clear</button>
       <button class="btn btn-info mb-1 ms-2" @click.stop="renderField('pathClear')">pathClear</button>
+      <form @submit.prevent="saveMap()">
+        <input type="text" required v-model="mapName" placeholder="mapName" />
+        <button class="btn btn-success ms-1" type="submit">save map</button>
+      </form>
     </div>
     <div class="row col-12">
       <div class="d-flex flex-column mt-5 p-0" style="width: 7%">
@@ -64,10 +68,7 @@
             class="hex"
             :id="xIndex + '|' + yIndex + ''"
             @click.stop="openBuildMenu(xIndex, yIndex, $event)"
-          >
-            <!-- <div><i class="far fa-flag" style="color: red"></i></div> -->
-          </div>
-          <!-- {{ row }} -->
+          ></div>
         </div>
       </div>
     </div>
@@ -94,6 +95,7 @@
 import { defineComponent } from "vue";
 import Navbar from "@/components/Navbar.vue";
 import * as type from "@/types";
+import * as API from "@/API";
 
 export default defineComponent({
   components: { Navbar },
@@ -106,14 +108,15 @@ export default defineComponent({
       player: {
         gold: 100,
       } as type.Player,
-      field: [] as unknown as type.Fields,
+      field: [] as unknown as type.Field,
+
+      mapName: "",
 
       hexagonSize: 50,
       fieldWidth: 30,
       fieldHeight: 15,
 
       path: [] as type.FieldDiv[],
-      longestPath :as type.FieldDiv[],
       pathLength: 30,
       counter: 0,
 
@@ -145,7 +148,7 @@ export default defineComponent({
     renderField(action: "clear" | "pathClear") {
       switch (action) {
         case "clear":
-          this.field = [] as unknown as type.Fields;
+          this.field = [] as unknown as type.Field;
           for (let row = 0; row < this.fieldWidth; row++) {
             let fieldRow = [];
             for (let hex = 0; hex < this.fieldHeight; hex++) {
@@ -223,15 +226,10 @@ export default defineComponent({
             this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false));
             pointer = nextCords;
           }
-          if(this.longestPath.length < this.path.length) this.longestPath = this.path;
           if (this.path.length < this.pathLength && this.counter < 1000) {
             console.log("newPath");
             this.counter++;
             this.generatePath("complex");
-          }else{
-            this.path = this.longestPath
-            this.renderField("pathClear");
-            this.applyPath();
           }
       }
     },
@@ -260,7 +258,6 @@ export default defineComponent({
       ];
       let neighbours = [];
       neighbours = x % 2 == 0 ? neighbours0 : neighbours1;
-      // if (this.field[x][y].type == "path") return [];
       let found = [];
       for (let neighbour of neighbours) {
         let targetX = x + neighbour.x;
@@ -331,6 +328,21 @@ export default defineComponent({
       if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22)) return [xIndex, yIndex];
     },
     //general
+    async saveMap() {
+      let newMap = {
+        name: this.mapName,
+        field: this.field,
+        creator: "",
+      };
+      try {
+        await API.saveMap(newMap);
+      } catch {
+        this.error("couldn't save map");
+      }
+    },
+    error(msg: string) {
+      console.error(msg);
+    },
     pathfield(id: string, start: boolean, finish: boolean): type.FieldDiv {
       return { color: this.Options[0].color, type: "path", id: id, start: start, finish: finish };
     },

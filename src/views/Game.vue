@@ -84,7 +84,7 @@ export default defineComponent({
       hexagonSize: 50,
       fieldWidthAmout: 30,
       fieldHeightAmout: 15,
-      fields: [] as unknown as type.Fields,
+      fields: [] as unknown as type.Field,
       fieldHeight: [] as type.FieldDiv[],
       enemies: [] as type.Enemy[],
       gameStarted: false,

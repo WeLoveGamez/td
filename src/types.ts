@@ -1,3 +1,11 @@
+export interface Map {
+  field: Field;
+  name: string;
+  creator: string;
+}
+
+export type Field = [FieldDiv[]];
+
 export interface FieldDiv {
   color: string;
   type: string;
@@ -6,14 +14,6 @@ export interface FieldDiv {
   start?: boolean;
   finish?: boolean;
 }
-export interface Tower {
-  atk: number;
-  atkspeed: number;
-  atkrdy: boolean;
-  range: number;
-}
-export type Fields = [FieldDiv[]];
-export type Vector = [number, number];
 
 export interface Enemy {
   size: number;
@@ -21,6 +21,12 @@ export interface Enemy {
   maxHP: number;
   HP: number;
   movement: Movement;
+}
+export interface Tower {
+  atk: number;
+  atkspeed: number;
+  atkrdy: boolean;
+  range: number;
 }
 export interface Player {
   gold: number;
@@ -46,3 +52,5 @@ export interface ShopOption {
   left: number;
   color: string;
 }
+
+export type Vector = [number, number];
