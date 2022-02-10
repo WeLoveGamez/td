@@ -1,5 +1,5 @@
 export interface Map {
-  field: Field;
+  field: FieldDiv[];
   name: string;
   creator: string;
 }

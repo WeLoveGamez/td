@@ -329,15 +329,22 @@ export default defineComponent({
     },
     //general
     async saveMap() {
+      let field = [];
+      for (let row of this.field) {
+        for (let hex of row) {
+          field.push(hex);
+        }
+      }
+      console.log({ field });
       let newMap = {
         name: this.mapName,
-        field: this.field,
+        field: field,
         creator: "",
       };
       try {
         await API.saveMap(newMap);
-      } catch {
-        this.error("couldn't save map");
+      } catch (e) {
+        this.error(`couldn't save map:${e}`);
       }
     },
     error(msg: string) {
