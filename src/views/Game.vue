@@ -50,11 +50,14 @@
 import { defineComponent } from "vue";
 import * as API from "@/API";
 import * as type from "@/types";
+import { add, subtract, multiply, divide, length, percent } from "@/calc";
 import Navbar from "@/components/Navbar.vue";
 
 export default defineComponent({
   components: { Navbar },
-
+  setup() {
+    return { percent };
+  },
   data() {
     return {
       player: {
@@ -96,12 +99,9 @@ export default defineComponent({
   },
   async mounted() {
     this.createField();
-    this.generatePath("basic");
-    setInterval(() => {
-      if (this.gameStarted) this.gameLoop();
-    }, 1000 / 60);
   },
   methods: {
+    //map
     createField() {
       this.field = [] as unknown as type.Field;
       for (let row = 0; row < this.fieldWidth; row++) {
@@ -115,6 +115,7 @@ export default defineComponent({
         }
         this.field.push(fieldRow);
       }
+      this.generatePath("basic");
     },
     async generatePath(type: "basic" | "complex", clear?: boolean) {
       let pointer = [0, this.getRandomInt(this.fieldHeight - 1)];
@@ -218,20 +219,36 @@ export default defineComponent({
     getPathIndeces(pathTile: type.FieldDiv): number[] {
       return pathTile?.id.split("|").map(n => parseInt(n));
     },
-    gameLoop() {
-      this.moveEnemy();
-      this.checkEnemyLife();
-      if (this.gamelooptick % 60 == 0) this.towerAttack();
-      this.gamelooptick++;
-    },
+    //game
     startGame() {
       this.gameStarted = true;
+      this.gameLoop();
+    },
+    gameLoop() {
       this.createEnemy();
+      if (this.gameStarted) {
+        setInterval(() => {
+          this.movement();
+          this.checkEntities();
+          this.towerAction();
+        }, 1000 / 60);
+      }
+    },
+
+    //controls
+    movement() {
+      this.moveEnemy();
+    },
+    checkEntities() {
+      this.checkEnemyLife;
+    },
+    towerAction() {
+      this.towerAttack();
     },
     //enemy
     createEnemy() {
       let enemy = {
-        vector: [428, 422],
+        vector: [0, 0],
         maxHP: 100,
         HP: 100,
         size: 20,
@@ -261,18 +278,18 @@ export default defineComponent({
     moveEnemy() {
       for (let enemy of this.enemies) {
         if (enemy.movement.counter < this.fieldWidth) {
-          enemy.movement.nextField = this.field[enemy.movement.counter + 1].findIndex((f: any) => f.type == "path");
+          enemy.movement.nextField = this.field[enemy.movement.counter + 1].findIndex(f => f.type == "path");
 
           enemy.movement.rect = document.getElementById(`${enemy.movement.counter + 1}|${enemy.movement.nextField}`)!.getBoundingClientRect();
 
           enemy.movement.fieldVec = this.positionEnemeny(enemy);
 
           if (!enemy.movement.moveVec.length) {
-            enemy.movement.moveVec = this.mulVec(this.dirVec(enemy.movement.fieldVec, enemy.vector), 0.05);
+            enemy.movement.moveVec = multiply(subtract(enemy.movement.fieldVec, enemy.vector), 0.05);
           }
-          enemy.vector = this.addVec(enemy.vector, enemy.movement.moveVec);
+          enemy.vector = add(enemy.vector, enemy.movement.moveVec);
 
-          if (this.lenVec(this.dirVec(enemy.vector, enemy.movement.fieldVec)) < 1) {
+          if (length(subtract(enemy.vector, enemy.movement.fieldVec)) < 1) {
             enemy.movement.counter++;
             enemy.movement.moveVec = [] as any as type.Vector;
           }
@@ -301,13 +318,13 @@ export default defineComponent({
         for (let towerfield of field.filter(f => f.tower)) {
           let rect = document.getElementById(towerfield.id)!.getBoundingClientRect();
           this.enemies.sort((a, b) =>
-            this.lenVec(this.subVec(this.middlePointRect(rect), this.subVec(a.vector, b.size / 2))) <
-            this.lenVec(this.subVec(this.middlePointRect(rect), this.subVec(b.vector, b.size / 2)))
+            length(subtract(this.middlePointRect(rect), subtract(a.vector, b.size / 2))) <
+            length(subtract(this.middlePointRect(rect), subtract(b.vector, b.size / 2)))
               ? 1
               : -1
           );
           for (let enemy of this.enemies) {
-            if (this.lenVec(this.subVec(this.middlePointRect(rect), this.subVec(enemy.vector, enemy.size / 2))) < towerfield.tower!.range) {
+            if (length(subtract(this.middlePointRect(rect), subtract(enemy.vector, enemy.size / 2))) < towerfield.tower!.range) {
               enemy.HP -= towerfield.tower!.atk;
               break;
             }
@@ -398,60 +415,15 @@ export default defineComponent({
       return [enemy.movement.rect.left + enemy.movement.rect.width * 0.5, enemy.movement.rect.top + enemy.movement.rect.height * 0.5] as type.Vector;
     },
     positionEnemeny(enemy: type.Enemy) {
-      return this.subVec(this.middlePointHexagon(enemy), enemy.size * 0.5 + 2);
+      return subtract(this.middlePointHexagon(enemy), enemy.size * 0.5 + 2);
     },
-    percent(number: number, change: "in" | "de") {
-      if (change == "in") {
-        return (number + 100) / 100;
-      }
-      if (change == "de") {
-        return number < 100 ? (100 - number) / 100 : 0;
-      }
-      return 1;
-    },
+
     collisionsCheck(vector1: type.Vector, vector2: type.Vector, size1: number, size2: number) {
-      return this.lenVec(this.subVec(vector1, vector2)) < size1 / 2 + size2 / 2;
+      return length(subtract(vector1, vector2)) < size1 / 2 + size2 / 2;
     },
     //rnd
     getRandomInt(max: number) {
       return Math.floor(Math.random() * max);
-    },
-
-    //Vector calculate
-    addVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] + vec2, vec1[1] + vec2] as type.Vector;
-      } else {
-        return [vec1[0] + vec2[0], vec1[1] + vec2[1]] as type.Vector;
-      }
-    },
-    subVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] - vec2, vec1[1] - vec2] as type.Vector;
-      } else {
-        return [vec1[0] - vec2[0], vec1[1] - vec2[1]] as type.Vector;
-      }
-    },
-    dirVec(vec1: type.Vector, vec2: type.Vector) {
-      let deltaArray = this.subVec(vec1, vec2) as type.Vector;
-      return deltaArray;
-    },
-    mulVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] * vec2, vec1[1] * vec2] as type.Vector;
-      } else {
-        return [vec1[0] * vec2[0], vec1[1] * vec2[1]] as type.Vector;
-      }
-    },
-    difVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] / vec2, vec1[1] / vec2] as type.Vector;
-      } else {
-        return [vec1[0] / vec2[0], vec1[1] / vec2[1]] as type.Vector;
-      }
-    },
-    lenVec(vec: type.Vector) {
-      return Math.sqrt(vec[0] ** 2 + vec[1] ** 2);
     },
   },
 });

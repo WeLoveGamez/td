@@ -96,6 +96,7 @@ import { defineComponent } from "vue";
 import Navbar from "@/components/Navbar.vue";
 import * as type from "@/types";
 import * as API from "@/API";
+import { length, subtract } from "@/calc";
 
 export default defineComponent({
   components: { Navbar },
@@ -369,48 +370,11 @@ export default defineComponent({
       return 1;
     },
     collisionsCheck(vector1: type.Vector, vector2: type.Vector, size1: number, size2: number) {
-      return this.lenVec(this.subVec(vector1, vector2)) < size1 / 2 + size2 / 2;
+      return length(subtract(vector1, vector2)) < size1 / 2 + size2 / 2;
     },
     //rnd
     getRandomInt(max: number) {
       return Math.round(Math.random() * max);
-    },
-
-    //Vector calculate
-    addVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] + vec2, vec1[1] + vec2] as type.Vector;
-      } else {
-        return [vec1[0] + vec2[0], vec1[1] + vec2[1]] as type.Vector;
-      }
-    },
-    subVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] - vec2, vec1[1] - vec2] as type.Vector;
-      } else {
-        return [vec1[0] - vec2[0], vec1[1] - vec2[1]] as type.Vector;
-      }
-    },
-    dirVec(vec1: type.Vector, vec2: type.Vector) {
-      let deltaArray = this.subVec(vec1, vec2) as type.Vector;
-      return deltaArray;
-    },
-    mulVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] * vec2, vec1[1] * vec2] as type.Vector;
-      } else {
-        return [vec1[0] * vec2[0], vec1[1] * vec2[1]] as type.Vector;
-      }
-    },
-    difVec(vec1: type.Vector, vec2: type.Vector | number) {
-      if (typeof vec2 == "number") {
-        return [vec1[0] / vec2, vec1[1] / vec2] as type.Vector;
-      } else {
-        return [vec1[0] / vec2[0], vec1[1] / vec2[1]] as type.Vector;
-      }
-    },
-    lenVec(vec: type.Vector) {
-      return Math.sqrt(vec[0] ** 2 + vec[1] ** 2);
     },
   },
 });
