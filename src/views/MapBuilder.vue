@@ -137,7 +137,7 @@ export default defineComponent({
         { type: "hill", color: "#754c00", top: 46, left: -25 },
         // { type: "", color: "#008000", top: 56, left: 0 },
         { type: "gras", color: "#008000", top: 46, left: 25 },
-      ] as type.ShopOption[],
+      ] as type.TileOption[],
     };
   },
   async mounted() {
@@ -296,7 +296,7 @@ export default defineComponent({
       this.shopPosition.position = clickedField;
     },
     //mapEditing
-    changeHex(xIndex: number, yIndex: number, type: "path" | "gras" | "water" | "hill") {
+    changeHex(xIndex: number, yIndex: number, type: "path" | "water" | "hill" | "grass") {
       this.field[xIndex][yIndex].type = type;
       this.field[xIndex][yIndex].color = this.Options.find(o => o.type == type)!.color;
     },

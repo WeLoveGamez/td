@@ -47,10 +47,15 @@ export interface Rect {
   width: number;
 }
 export interface ShopOption {
-  type: "path" | "water" | "gras";
   top: number;
   left: number;
   color: string;
+}
+export interface TileOption extends ShopOption {
+  type: "path" | "water" | "hill" | "grass";
+}
+export interface towerOption extends ShopOption {
+  type: "1" | "2" | "3";
 }
 
 export type Vector = [number, number];
