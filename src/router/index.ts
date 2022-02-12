@@ -3,17 +3,13 @@ import Game from "../views/Game.vue";
 import MapBuilder from "@/views/MapBuilder.vue";
 import Register from "@/views/Register.vue";
 import Login from "@/views/Login.vue";
+import Main from "@/views/Main.vue";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { ref } from "vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: "/game",
-    name: "Game",
-    component: Game,
-  },
-  {
-    path: "/login",
+    path: "/",
     name: "Login",
     component: Login,
   },
@@ -21,6 +17,16 @@ const routes: Array<RouteRecordRaw> = [
     path: "/register",
     name: "Register",
     component: Register,
+  },
+  {
+    path: "/main",
+    name: "Main",
+    component: Main,
+  },
+  {
+    path: "/game",
+    name: "Game",
+    component: Game,
   },
   {
     path: "/MapBuilder",
