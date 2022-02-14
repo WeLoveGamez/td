@@ -3,5 +3,8 @@
   "jsxBracketSameLine": true,
   "printWidth": 150,
   "htmlWhitespaceSensitivity": "ignore",
-  "endOfLine": "auto"
+  "endOfLine": "lf",
+  "tabWidth": 4,
+  "semi": false,
+  "singleQuote": true
 }
