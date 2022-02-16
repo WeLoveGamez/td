@@ -21,6 +21,7 @@ export interface Enemy {
     maxHP: number
     HP: number
     movement: Movement
+    id: string
 }
 export interface Tower {
     atk: number
@@ -28,9 +29,16 @@ export interface Tower {
     atkrdy: boolean
     range: number
     price: number
+    color: string
+    type: string
+    id: string
+    top: number
+    left: number
+    target: string
 }
 export interface Player {
     gold: number
+    hp: number
 }
 export interface Movement {
     nextField: number
