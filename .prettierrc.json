@@ -1,10 +1,10 @@
 {
-  "arrowParens": "avoid",
-  "jsxBracketSameLine": true,
-  "printWidth": 150,
-  "htmlWhitespaceSensitivity": "ignore",
-  "endOfLine": "lf",
-  "tabWidth": 4,
-  "semi": false,
-  "singleQuote": true
+    "arrowParens": "avoid",
+    "jsxBracketSameLine": true,
+    "printWidth": 170,
+    "htmlWhitespaceSensitivity": "ignore",
+    "endOfLine": "lf",
+    "tabWidth": 4,
+    "semi": false,
+    "singleQuote": true
 }
