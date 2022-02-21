@@ -1,29 +1,28 @@
 <template>
-  <router-view />
+    <router-view />
 </template>
 
 <style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #ffffff;
-  background-color: #2a2a35;
-  height: 100vh;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #ffffff;
+    background-color: #2a2a35;
 }
 
 #nav {
-  padding: 10px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid black;
-  a {
-    font-weight: bold;
-    color: #ffffff;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid black;
+    a {
+        font-weight: bold;
+        color: #ffffff;
 
-    &.router-link-exact-active {
-      color: #42b983;
+        &.router-link-exact-active {
+            color: #42b983;
+        }
     }
-  }
 }
 </style>

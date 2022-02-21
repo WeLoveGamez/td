@@ -17,12 +17,14 @@ export interface FieldDiv {
 
 export interface Enemy {
     size: number
-    vector: Vector
+    cords: Vector
     maxHP: number
     HP: number
-    movement: Movement
     id: string
+    nextPathNumber: number
+    speed: number
 }
+
 export interface Tower {
     atk: number
     atkspeed: number
@@ -30,23 +32,15 @@ export interface Tower {
     range: number
     price: number
     color: string
-    type: string
+    type: '1' | '2' | '3'
     id: string
-    top: number
-    left: number
-    target: string
+    target: string | null
 }
 export interface Player {
     gold: number
     hp: number
 }
-export interface Movement {
-    nextField: number
-    rect: Rect
-    fieldVec: Vector
-    moveVec: Vector
-    counter: number
-}
+
 export interface Rect {
     left: number
     right: number
@@ -63,7 +57,7 @@ export interface ShopOption {
 export interface TileOption extends ShopOption {
     type: 'path' | 'water' | 'hill' | 'grass'
 }
-export interface towerOption extends ShopOption {
+export interface TowerOption extends ShopOption {
     type: '1' | '2' | '3'
 }
 

@@ -264,10 +264,7 @@ export default defineComponent({
                 let targetX = x + neighbour.x
                 let targetY = y + neighbour.y
                 console.log({ targetX, targetY })
-                if (
-                    !(targetX < 0 || targetY < 0 || targetX > this.fieldWidth - 1 || targetY > this.fieldHeight - 1) &&
-                    this.field[targetX][targetY].type == type
-                )
+                if (!(targetX < 0 || targetY < 0 || targetX > this.fieldWidth - 1 || targetY > this.fieldHeight - 1) && this.field[targetX][targetY].type == type)
                     found.push(this.field[targetX][targetY])
                 console.log({ x, y, neighbour })
             }
@@ -357,12 +354,7 @@ export default defineComponent({
         middlePointRect(rect: type.Rect) {
             return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector
         },
-        middlePointHexagon(enemy: type.Enemy) {
-            return [
-                enemy.movement.rect.left + enemy.movement.rect.width * 0.5,
-                enemy.movement.rect.top + enemy.movement.rect.height * 0.5,
-            ] as type.Vector
-        },
+
         percent(number: number, change: 'in' | 'de') {
             if (change == 'in') {
                 return (number + 100) / 100

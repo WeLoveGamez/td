@@ -1,16 +1,4 @@
-import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    DocumentData,
-    getDoc,
-    getDocs,
-    getFirestore,
-    QueryDocumentSnapshot,
-    setDoc,
-    updateDoc,
-} from 'firebase/firestore'
+import { addDoc, collection, doc, getFirestore, setDoc } from 'firebase/firestore'
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { currentUser } from './router'
 import * as type from '@/types'
@@ -34,7 +22,7 @@ export async function register(email: string, password: string): Promise<void> {
     })
 }
 
-export async function saveMap(map: type.Map) {
+export async function saveMap(map: type.Map): Promise<void> {
     const creator = currentUser.value?.uid
     await addDoc(collection(getFirestore(), 'maps'), {
         name: map.name,

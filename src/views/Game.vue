@@ -1,79 +1,98 @@
 <template>
-    <Navbar></Navbar>
-    <div @click="shopShow = false" class="flex-1">
-        <div>gold: {{ Math.round(player.gold) }}</div>
-        <div>HP: {{ Math.round(player.hp) }}</div>
-
-        <div class="d-flex justify-content-center mt-3">
-            <div v-for="(row, xIndex) in field" :key="JSON.stringify(row)" :style="{ marginTop: xIndex % 2 == 0 ? `${20}px` : 0 + 'px' }">
-                <div v-for="(hex, yIndex) in row" :key="hex.id" @click.stop="openBuildMenu(xIndex, yIndex, $event)" :style="{ fontSize: `${hexagonSize}px` }">
-                    <div
-                        v-if="towers.findIndex(t => getPathIndeces(t)[0] == xIndex && getPathIndeces(t)[1] == yIndex) != -1"
-                        :style="{
-                            color: towers[towers.findIndex(t => getPathIndeces(t)[0] == xIndex && getPathIndeces(t)[1] == yIndex)].color,
-                        }"
-                        class="hex"
-                        :id="xIndex + '|' + yIndex + ''"
-                    ></div>
-                    <div
-                        v-else
-                        :style="{
-                            color: hex.color,
-                        }"
-                        class="hex"
-                        :id="xIndex + '|' + yIndex + ''"
-                    ></div>
-                </div>
+    <div style="height: 100vh; position: relative" @click="shopShow = false">
+        <Navbar></Navbar>
+        <div class="flex-1">
+            <div class="d-flex justify-content-around">
+                <div>gold: {{ Math.round(player.gold) }}</div>
+                <div>HP: {{ player.hp }}</div>
+                <div>wave: {{ wave }}</div>
             </div>
-            <div
-                v-for="enemy of enemies"
-                :key="JSON.stringify(enemy)"
-                style="position: absolute; background-color: blue; border-radius: 50%"
-                :style="{
-                    left: enemy.vector[0] + 'px',
-                    top: enemy.vector[1] + 'px',
-                    height: enemy.size * percent(enemy.maxHP - enemy.HP, 'de') + 'px',
-                    width: enemy.size * percent(enemy.maxHP - enemy.HP, 'de') + 'px',
-                }"
-            ></div>
+
+            <div class="d-flex justify-content-center mt-3">
+                <div v-for="(row, xIndex) in field" :key="JSON.stringify(row)" :style="{ marginTop: xIndex % 2 == 0 ? `${18}px` : 0 + 'px' }">
+                    <div v-for="(hex, yIndex) in row" :key="hex.id" @click.stop="openBuildMenu(xIndex, yIndex, $event)">
+                        <div
+                            v-if="getTower(xIndex, yIndex)"
+                            :style="{
+                                color: getTower(xIndex, yIndex)?.color,
+                                '--range': getTower(xIndex, yIndex)?.range + 'px',
+                                '--color': getTower(xIndex, yIndex)?.color,
+                            }"
+                            class="hex attackrange"
+                            :class="{ active: shopShow }"
+                            :id="xIndex + '|' + yIndex + ''"
+                        ></div>
+                        <div
+                            v-else
+                            :style="{
+                                color: hex.color,
+                            }"
+                            class="hex"
+                            :id="xIndex + '|' + yIndex + ''"
+                        ></div>
+                    </div>
+                </div>
+                <div
+                    v-for="enemy of enemies"
+                    :key="JSON.stringify(enemy)"
+                    style="position: absolute; background-color: blue; border-radius: 50%"
+                    :style="{
+                        left: enemy.cords[0] - (Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5) / 2 + 'px',
+                        top: enemy.cords[1] - (Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5) / 2 + 'px',
+                        height: Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5 + 'px',
+                        width: Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5 + 'px',
+                    }"
+                ></div>
+            </div>
+            <div v-for="option in towerOptions" :key="option.type">
+                <div
+                    v-if="shopShow"
+                    @click.stop="buildTower(shopPosition.position, option)"
+                    style="position: absolute; border: 2px solid rgb(0, 0, 0); z-index: 1000"
+                    :style="{
+                        left: shopPosition.left + option.left + 'px',
+                        top: shopPosition.top + option.top + 'px',
+                        height: shopSize + 'px',
+                        width: shopSize + 'px',
+                        backgroundColor: option.color,
+                    }"
+                ></div>
+            </div>
+            <div class="mx-auto">
+                <button class="btn btn-primary shadow-none me-1" :disabled="gameStarted" @click="gameLoop()">step</button>
+                <button class="btn btn-primary shadow-none me-1" @click="gameStarted = !gameStarted">
+                    {{ gameStarted ? 'pause' : 'play' }}
+                </button>
+            </div>
         </div>
-        <div v-for="option in towerOptions" :key="option.type">
-            <div
-                v-if="shopShow"
-                @click.stop="buildTower(shopPosition.position, option)"
-                style="position: absolute; border: 2px solid rgb(0, 0, 0)"
-                :style="{
-                    left: shopPosition.left + option.left + 'px',
-                    top: shopPosition.top + option.top + 'px',
-                    height: shopSize + 'px',
-                    width: shopSize + 'px',
-                    backgroundColor: option.color,
-                }"
-            ></div>
-        </div>
-        <button class="btn btn-primary shadow-none me-1" @click="startGame()">gameLoop</button>
+        <svg style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
+            <polyline
+                v-for="tower of towers.filter(t => t.target)"
+                :key="tower.id"
+                :points="`${getPosition(...getPathIndices(tower)).join(', ')} ${getEnemyPosition(tower.target!)?.join(', ')}`"
+                fill="none"
+                stroke="red"
+            />
+        </svg>
     </div>
-    <!-- <svg>
-        <polyline points="100,100 150,25 " fill="none" stroke="black" />
-    </svg> -->
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as type from '@/types'
-import { add, subtract, multiply, length, percent } from '@/calc'
+import { add, subtract, multiply, length, percent, lengthSquared, divide } from '@/calc'
 import Navbar from '@/components/Navbar.vue'
 
 export default defineComponent({
     components: { Navbar },
     setup() {
-        return { percent }
+        return { percent, add }
     },
     data() {
         return {
             player: {
                 gold: 100,
-                hp: 150,
+                hp: 10,
             } as type.Player,
             mouse: {
                 vector: [0, 0] as type.Vector,
@@ -92,6 +111,8 @@ export default defineComponent({
 
             gameStarted: false,
             gamelooptick: 0,
+            wave: 0,
+            nextWaveSpawning: false,
 
             shopSize: 20,
             shopShow: false,
@@ -102,17 +123,18 @@ export default defineComponent({
             },
 
             towerOptions: [
-                { atk: 10, range: 150, atkspeed: 1, atkrdy: true, price: 20, color: 'blueviolet', type: '1', id: '', top: 7, left: -25 },
-                { atk: 10, range: 150, atkspeed: 1, atkrdy: true, price: 20, color: 'darkorange', type: '2', id: '', top: 7, left: 25 },
-                { atk: 10, range: 150, atkspeed: 1, atkrdy: true, price: 20, color: 'aquamarine', type: '3', id: '', top: -2, left: 0 },
-                // { type: "hill", color: "#754c00", top: 46, left: -25 },
-                // { type: "", color: "#008000", top: 56, left: 0 },
-                // { type: "gras", color: "#008000", top: 46, left: 25 },
-            ] as type.Tower[],
+                { color: 'blueviolet', type: '1', top: 7, left: -23 },
+                { color: 'darkorange', type: '2', top: 7, left: 27 },
+                { color: 'aquamarine', type: '3', top: -2, left: 2 },
+                // { type: "hill", color: "#754c00", top: 46, left: -23 },
+                // { type: "", color: "#008000", top: 56, left: 2 },
+                // { type: "gras", color: "#008000", top: 46, left: 27 },
+            ] as type.TowerOption[],
         }
     },
-    async mounted() {
+    mounted() {
         this.createField()
+        this.startGame()
     },
     methods: {
         //map
@@ -131,7 +153,7 @@ export default defineComponent({
             }
             this.generatePath('basic')
         },
-        async generatePath(type: 'basic' | 'complex', clear?: boolean) {
+        generatePath(type: 'basic' | 'complex', clear?: boolean) {
             let pointer = [0, this.getRandomInt(this.fieldHeight - 1)]
             this.path = []
             this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false))
@@ -154,6 +176,7 @@ export default defineComponent({
                         }
                         pointer[0]++
                         this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false)
+                        this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false))
                     }
                     this.field[pointer[0] + 1][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true)
                     break
@@ -167,7 +190,7 @@ export default defineComponent({
                         pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'gras') //get all near fields of type gras
                         console.log({ gras: pointerNeighbours })
                         for (let neighbour of pointerNeighbours) {
-                            let cords = this.getPathIndeces(neighbour)
+                            let cords = this.getPathIndices(neighbour)
                             let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], 'path')
                             console.log({ cords, path: neighboursPaths })
 
@@ -177,7 +200,7 @@ export default defineComponent({
                         if (validPointerNeighbours.length == 0) break
                         let random = this.getRandomInt(validPointerNeighbours.length - 1)
                         let nextPath = validPointerNeighbours[random]
-                        let nextCords = this.getPathIndeces(nextPath)
+                        let nextCords = this.getPathIndices(nextPath)
                         this.field[nextCords[0]][nextCords[1]] = this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false)
                         this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false))
                         pointer = nextCords
@@ -186,8 +209,8 @@ export default defineComponent({
         },
         applyPath() {
             this.path.forEach(h => {
-                this.field[this.getPathIndeces(h)[0]][this.getPathIndeces(h)[1]] = this.pathfield(
-                    `${this.getPathIndeces(h)[0]}|${this.getPathIndeces(h)[1]}`,
+                this.field[this.getPathIndices(h)[0]][this.getPathIndices(h)[1]] = this.pathfield(
+                    `${this.getPathIndices(h)[0]}|${this.getPathIndices(h)[1]}`,
                     true,
                     false
                 )
@@ -230,24 +253,22 @@ export default defineComponent({
             }
             return found
         },
-        getPathIndeces(pathTile: type.FieldDiv): number[] {
-            return pathTile?.id.split('|').map(n => parseInt(n))
+        getPathIndices(pathTile: type.FieldDiv): type.Vector {
+            return pathTile?.id.split('|').map(n => parseInt(n)) as type.Vector
         },
         //game
         startGame() {
-            this.gameStarted = true
-            this.gameLoop()
+            setInterval(() => {
+                if (this.gameStarted) {
+                    this.gameLoop()
+                }
+            }, 1000 / 60)
         },
         gameLoop() {
-            this.createEnemy()
-            if (this.gameStarted) {
-                setInterval(() => {
-                    this.gamelooptick++
-                    this.movement()
-                    this.checkEntities()
-                    this.towerAction()
-                }, 1000 / 60)
-            }
+            this.checkEntities()
+            this.movement()
+            this.towerAction()
+            this.gamelooptick++
         },
 
         //controls
@@ -262,132 +283,108 @@ export default defineComponent({
             this.towerAttack()
         },
         //enemy
+        spawnWave() {
+            if (this.nextWaveSpawning == true) return
+            this.nextWaveSpawning = true
+            this.wave++
+            let enemies = 0
+            let interval = setInterval(() => {
+                this.createEnemy()
+                enemies++
+                if (enemies == this.wave) {
+                    clearInterval(interval)
+                    this.nextWaveSpawning = false
+                }
+            }, 500)
+        },
         createEnemy() {
             let enemy = {
-                vector: [0, 0],
-                id: JSON.stringify(this.gamelooptick),
-                maxHP: 100,
-                HP: 100,
+                cords: this.getPosition(...this.getPathIndices(this.path[0])),
+                id: JSON.stringify(Math.random()),
+                maxHP: 100 * this.wave ** 0.5,
+                HP: 100 * this.wave ** 0.5,
                 size: 20,
-                movement: {
-                    nextField: 0,
-                    fieldVec: [0, 0],
-                    moveVec: [] as unknown as type.Vector,
-                    counter: 0,
-                    rect: document.getElementById(this.path[0].id)!.getBoundingClientRect() as unknown as type.Rect,
-                },
+                nextPathNumber: 1,
+                speed: 1.5,
             } as type.Enemy
-            enemy.vector = this.positionEnemeny(enemy)
             this.enemies.push(enemy)
         },
         checkEnemyLife() {
-            for (let enemy of [...this.enemies]) {
-                if (enemy.HP <= 0) {
-                    this.enemies = this.enemies.filter(e => e.id !== enemy.id)
-                    this.player.gold += enemy.maxHP / 10
-                    this.createEnemy()
-                }
+            this.player.gold += this.enemies.filter(e => e.HP <= 0).reduce((a, c) => a + c.maxHP / 10, 0)
+            this.enemies = this.enemies.filter(e => e.HP > 0)
+
+            if (this.enemies.length == 0) {
+                this.spawnWave()
             }
         },
         moveEnemy() {
             for (let enemy of this.enemies) {
-                if (enemy.movement.counter < this.fieldWidth - 1) {
-                    enemy.movement.nextField = this.field[enemy.movement.counter + 1].findIndex(f => f.type == 'path')
-                    enemy.movement.rect = document.getElementById(`${enemy.movement.counter + 1}|${enemy.movement.nextField}`)!.getBoundingClientRect()
-                    enemy.movement.fieldVec = this.positionEnemeny(enemy)
-                    if (!enemy.movement.moveVec.length) {
-                        enemy.movement.moveVec = multiply(subtract(enemy.movement.fieldVec, enemy.vector), 0.05)
-                    }
-                    enemy.vector = add(enemy.vector, enemy.movement.moveVec)
-                    if (length(subtract(enemy.vector, enemy.movement.fieldVec)) < 1) {
-                        enemy.movement.counter++
-                        enemy.movement.moveVec = [] as unknown as type.Vector
-                    }
-                } else {
-                    this.survivedEnemy(enemy)
+                let targetPosition = this.getPosition(...this.getPathIndices(this.path[enemy.nextPathNumber]))
+                let movement = subtract(targetPosition, enemy.cords)
+                enemy.cords = add(enemy.cords, divide(movement, length(movement) / enemy.speed))
+                if (lengthSquared(subtract(enemy.cords, targetPosition)) < enemy.speed ** 2) {
+                    if (enemy.nextPathNumber <= this.path.length) enemy.nextPathNumber++
+                    else this.survivedEnemy(enemy)
                 }
             }
         },
         survivedEnemy(enemy: type.Enemy) {
-            this.player.hp -= enemy.HP
-            this.enemies.find(e => e == enemy)!.HP = 0
+            this.player.hp--
+            this.enemies = this.enemies.filter(e => e !== enemy)
         },
         //tower
-        buildTower(position: type.Vector, tower: type.Tower) {
+        buildTower(position: type.Vector, tower: type.TowerOption) {
             this.shopShow = false
             if (!tower) return
             this.towers.push(this.tower(`${position[0]}|${position[1]}`, tower)!)
             this.player.gold -= this.towers.find(t => t.id == `${position[0]}|${position[1]}`)!.price
         },
-        tower(id: string, tower: type.Tower) {
-            switch (tower.type) {
-                case '1':
-                    return {
+        tower(id: string, tower: type.TowerOption): type.Tower {
+            return {
+                ...{
+                    '1': {
                         atk: 10,
                         range: 150,
                         atkspeed: 1,
-                        atkrdy: true,
                         price: 20,
-                        color: tower.color,
-                        type: 'tower',
-                        id: id,
-                        top: 0,
-                        left: 0,
-                        target: '',
-                    }
-                case '2':
-                    return {
+                    },
+                    '2': {
                         atk: 10,
                         range: 150,
                         atkspeed: 3,
-                        atkrdy: true,
                         price: 20,
-                        color: tower.color,
-                        type: 'tower',
-                        id: id,
-                        top: 0,
-                        left: 0,
-                        target: '',
-                    }
-                case '3':
-                    return {
+                    },
+                    '3': {
                         atk: 10,
                         range: 150,
                         atkspeed: 10,
-                        atkrdy: true,
                         price: 20,
-                        color: tower.color,
-                        type: 'tower',
-                        id: id,
-                        top: 0,
-                        left: 0,
-                        target: '',
-                    }
+                    },
+                }[tower.type],
+
+                atkrdy: true,
+                color: tower.color,
+                type: tower.type,
+                id: id,
+                target: null,
             }
         },
         getTowerTargets() {
-            this.towers.forEach(t => {
+            for (let t of this.towers) {
                 let rect = document.getElementById(t.id)!.getBoundingClientRect()
-                this.enemies.sort((a, b) =>
-                    length(subtract(this.middlePointRect(rect), subtract(a.vector, b.size / 2))) <
-                    length(subtract(this.middlePointRect(rect), subtract(b.vector, b.size / 2)))
-                        ? 1
-                        : -1
-                )
-                for (let enemy of this.enemies) {
-                    if (length(subtract(this.middlePointRect(rect), subtract(enemy.vector, enemy.size / 2))) < t.range) {
-                        t.target = JSON.stringify(this.enemies[0].id)
-                        break
-                    } else {
-                        t.target = ''
-                    }
-                }
-            })
+                let newTarget = this.enemies
+                    .sort((a, b) =>
+                        lengthSquared(subtract(this.middlePointRect(rect), subtract(a.cords, b.size / 2))) <
+                        lengthSquared(subtract(this.middlePointRect(rect), subtract(b.cords, b.size / 2)))
+                            ? -1
+                            : 1
+                    )
+                    .filter(enemy => lengthSquared(subtract(this.middlePointRect(rect), subtract(enemy.cords, enemy.size / 2))) < t.range ** 2)[0]
+                t.target = newTarget?.id ?? null
+            }
         },
         towerAttack() {
-            for (let tower of this.towers) {
-                if (this.gamelooptick % (60 / tower.atkspeed) !== 0) return
-                if (!tower.target || !this.enemies.find(e => e.id == tower.target)) return
+            for (let tower of this.towers.filter(t => t.target).filter(t => this.gamelooptick % (60 / t.atkspeed) == 0)) {
                 this.enemies.find(e => e.id == tower.target)!.HP -= tower.atk
             }
         },
@@ -396,8 +393,7 @@ export default defineComponent({
             this.shopShow = true
             this.mouse.vector = [e.pageX, e.pageY]
             let clickedField = this.checkClickedField(xIndex, yIndex) as type.Vector
-            let rect = document.getElementById(`${clickedField[0]}|${clickedField[1]}`)!.getBoundingClientRect()
-            let shopArray = this.middlePointRect(rect)
+            let shopArray = this.getPosition(...clickedField)
             shopArray[0] -= this.shopSize / 2 + 3
             shopArray[1] -= this.hexagonSize - this.shopSize / 2 - 2
             this.shopPosition.left = shopArray[0]
@@ -425,13 +421,25 @@ export default defineComponent({
                 }
             }
         },
-        checkField(index: number, index2: number) {
-            if (index2 < 0) return
-            let rect = document.getElementById(`${index}|${index2}`)!.getBoundingClientRect()
-            if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22)) if (this.field[index][index2].type != 'path') return [index, index2]
+        checkField(xIndex: number, yIndex: number) {
+            if (yIndex < 0) return
+            let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
+            if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22)) if (this.field[xIndex][yIndex].type != 'path') return [xIndex, yIndex]
             return false
         },
         //general
+        getTower(x: number, y: number): type.Tower | undefined {
+            return this.towers.find(t => this.getPathIndices(t)[0] == x && this.getPathIndices(t)[1] == y)
+        },
+        getPosition(xIndex: number, yIndex: number) {
+            let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
+            return this.middlePointRect(rect)
+        },
+        getEnemyPosition(id: string) {
+            let enemy = this.enemies.find(e => e.id == id)
+            if (!enemy) return
+            return enemy?.cords
+        },
         checkPrice(price: number) {
             if (price <= this.player.gold) {
                 this.player.gold -= price
@@ -443,32 +451,9 @@ export default defineComponent({
             return { color: '#555555', type: 'path', id: id, start: start, finish: finish }
         },
 
-        // tower2(id: string) {
-        //     return {
-        //         color: 'darkorange',
-        //         type: 'tower',
-        //         id: id,
-        //         tower: { atk: 10, range: 150, atkspeed: 1, atkrdy: true },
-        //     }
-        // },
-        // tower3(id: string) {
-        //     return {
-        //         color: 'aquamarine',
-        //         type: 'tower',
-        //         id: id,
-        //         tower: { atk: 10, range: 150, atkspeed: 1, atkrdy: true },
-        //     }
-        // },
         middlePointRect(rect: type.Rect) {
             return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector
         },
-        middlePointHexagon(enemy: type.Enemy) {
-            return [enemy.movement.rect.left + enemy.movement.rect.width * 0.5, enemy.movement.rect.top + enemy.movement.rect.height * 0.5] as type.Vector
-        },
-        positionEnemeny(enemy: type.Enemy) {
-            return subtract(this.middlePointHexagon(enemy), enemy.size * 0.5 + 2)
-        },
-
         collisionsCheck(vector1: type.Vector, vector2: type.Vector, size1: number, size2: number) {
             return length(subtract(vector1, vector2)) < size1 / 2 + size2 / 2
         },
@@ -479,15 +464,34 @@ export default defineComponent({
     },
 })
 </script>
-<style lang="css" scoped>
-.hex::before {
-    content: '\2B22';
-    display: flex;
-    margin-top: -35px;
-    margin-left: -5px;
-    -webkit-transform: rotate(-30deg);
-    -moz-transform: rotate(-30deg);
-    -o-transform: rotate(-30deg);
-    transform: rotate(-30deg);
+<style lang="scss" scoped>
+.hex {
+    position: relative;
+    width: 33px;
+    height: 37px;
+    font-size: 50px;
+    &::before {
+        content: '\2B22';
+        display: flex;
+        -webkit-transform: rotate(-30deg);
+        -moz-transform: rotate(-30deg);
+        -o-transform: rotate(-30deg);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        position: absolute;
+    }
+}
+.attackrange.active::after {
+    content: '';
+    width: calc(2 * var(--range));
+    height: calc(2 * var(--range));
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid var(--color);
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    z-index: 2;
 }
 </style>
