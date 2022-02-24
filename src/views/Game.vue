@@ -69,7 +69,7 @@
             <polyline
                 v-for="tower of towers.filter(t => t.target)"
                 :key="tower.id"
-                :points="`${getPosition(...getPathIndices(tower)).join(', ')} ${getEnemyPosition(tower.target!)?.join(', ')}`"
+                :points="`${getPosition(...getFieldIndices(tower)).join(', ')} ${getEnemyPosition(tower.target!)?.join(', ')}`"
                 fill="none"
                 stroke="red"
             />
@@ -179,6 +179,8 @@ export default defineComponent({
                         this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false))
                     }
                     this.field[pointer[0] + 1][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true)
+                    this.path.push(this.pathfield(`${pointer[0] + 1}|${pointer[1]}`, false, true))
+
                     break
 
                 case 'complex':
@@ -190,7 +192,7 @@ export default defineComponent({
                         pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'gras') //get all near fields of type gras
                         console.log({ gras: pointerNeighbours })
                         for (let neighbour of pointerNeighbours) {
-                            let cords = this.getPathIndices(neighbour)
+                            let cords = this.getFieldIndices(neighbour)
                             let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], 'path')
                             console.log({ cords, path: neighboursPaths })
 
@@ -200,7 +202,7 @@ export default defineComponent({
                         if (validPointerNeighbours.length == 0) break
                         let random = this.getRandomInt(validPointerNeighbours.length - 1)
                         let nextPath = validPointerNeighbours[random]
-                        let nextCords = this.getPathIndices(nextPath)
+                        let nextCords = this.getFieldIndices(nextPath)
                         this.field[nextCords[0]][nextCords[1]] = this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false)
                         this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false))
                         pointer = nextCords
@@ -209,8 +211,8 @@ export default defineComponent({
         },
         applyPath() {
             this.path.forEach(h => {
-                this.field[this.getPathIndices(h)[0]][this.getPathIndices(h)[1]] = this.pathfield(
-                    `${this.getPathIndices(h)[0]}|${this.getPathIndices(h)[1]}`,
+                this.field[this.getFieldIndices(h)[0]][this.getFieldIndices(h)[1]] = this.pathfield(
+                    `${this.getFieldIndices(h)[0]}|${this.getFieldIndices(h)[1]}`,
                     true,
                     false
                 )
@@ -253,7 +255,7 @@ export default defineComponent({
             }
             return found
         },
-        getPathIndices(pathTile: type.FieldDiv): type.Vector {
+        getFieldIndices(pathTile: type.FieldDiv): type.Vector {
             return pathTile?.id.split('|').map(n => parseInt(n)) as type.Vector
         },
         //game
@@ -299,7 +301,7 @@ export default defineComponent({
         },
         createEnemy() {
             let enemy = {
-                cords: this.getPosition(...this.getPathIndices(this.path[0])),
+                cords: this.getPosition(...this.getFieldIndices(this.path[0])),
                 id: JSON.stringify(Math.random()),
                 maxHP: 100 * this.wave ** 0.5,
                 HP: 100 * this.wave ** 0.5,
@@ -319,12 +321,15 @@ export default defineComponent({
         },
         moveEnemy() {
             for (let enemy of this.enemies) {
-                let targetPosition = this.getPosition(...this.getPathIndices(this.path[enemy.nextPathNumber]))
-                let movement = subtract(targetPosition, enemy.cords)
-                enemy.cords = add(enemy.cords, divide(movement, length(movement) / enemy.speed))
-                if (lengthSquared(subtract(enemy.cords, targetPosition)) < enemy.speed ** 2) {
-                    if (enemy.nextPathNumber <= this.path.length) enemy.nextPathNumber++
-                    else this.survivedEnemy(enemy)
+                if (enemy.nextPathNumber < this.path.length) {
+                    let targetPosition = this.getPosition(...this.getFieldIndices(this.path[enemy.nextPathNumber]))
+                    let movement = subtract(targetPosition, enemy.cords)
+                    enemy.cords = add(enemy.cords, divide(movement, length(movement) / enemy.speed))
+                    if (lengthSquared(subtract(enemy.cords, targetPosition)) < enemy.speed ** 2) {
+                        enemy.nextPathNumber++
+                    }
+                } else {
+                    this.survivedEnemy(enemy)
                 }
             }
         },
@@ -429,7 +434,7 @@ export default defineComponent({
         },
         //general
         getTower(x: number, y: number): type.Tower | undefined {
-            return this.towers.find(t => this.getPathIndices(t)[0] == x && this.getPathIndices(t)[1] == y)
+            return this.towers.find(t => this.getFieldIndices(t)[0] == x && this.getFieldIndices(t)[1] == y)
         },
         getPosition(xIndex: number, yIndex: number) {
             let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
