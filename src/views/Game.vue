@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100vh; position: relative" @click="shopShow = false">
+    <div style="height: 100vh; position: relative" @click="selectedTileIndices = null">
         <Navbar></Navbar>
         <div class="flex-1">
             <div class="d-flex justify-content-around">
@@ -10,16 +10,15 @@
 
             <div class="d-flex justify-content-center mt-3">
                 <div v-for="(row, xIndex) in field" :key="JSON.stringify(row)" :style="{ marginTop: xIndex % 2 == 0 ? `${18}px` : 0 + 'px' }">
-                    <div v-for="(hex, yIndex) in row" :key="hex.id" @click.stop="openBuildMenu(xIndex, yIndex, $event)">
+                    <div v-for="(hex, yIndex) in row" :key="hex.id" @click.stop="selectedTileIndices = [xIndex, yIndex]">
                         <div
                             v-if="getTower(xIndex, yIndex)"
                             :style="{
-                                color: getTower(xIndex, yIndex)?.color,
                                 '--range': getTower(xIndex, yIndex)?.range + 'px',
                                 '--color': getTower(xIndex, yIndex)?.color,
                             }"
                             class="hex attackrange"
-                            :class="{ active: shopShow }"
+                            :class="{ active: selectedTileIndices }"
                             :id="xIndex + '|' + yIndex + ''"
                         >
                             <Teleport to="#polylineContainer">
@@ -72,19 +71,42 @@
                     </Teleport>
                 </div>
             </div>
-            <div v-for="option in towerOptions" :key="option.type">
-                <div
-                    v-if="shopShow"
-                    @click.stop="buildTower(shopPosition.position, option)"
-                    style="position: absolute; border: 2px solid rgb(0, 0, 0); z-index: 1000"
-                    :style="{
-                        left: shopPosition.left + option.left + 'px',
-                        top: shopPosition.top + option.top + 'px',
-                        height: shopSize + 'px',
-                        width: shopSize + 'px',
-                        backgroundColor: option.color,
-                    }"
-                ></div>
+            <div class="d-flex mx-auto">
+                <div v-for="option in towerOptions" :key="option.type">
+                    <div v-if="selectedTileIndices">
+                        <div
+                            v-if="selectedTile?.type == 'grass'"
+                            @click.stop="buildTower(selectedTileIndices!, option)"
+                            :style="{
+                                // left: getPosition(...selectedTileIndices!)[0] + option.left -12 + 'px',
+                                // top: getPosition(...selectedTileIndices!)[1] + option.top -37+  'px',
+                                // height: shopSize + 'px',
+                                // width: shopSize + 'px',
+                                backgroundColor: option.color,
+                            }"
+                        >
+                            <div id="shop">
+                                <div class="card w-100">
+                                    <div class="card card-header"></div>
+                                    <div class="card card-body"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="getTower(...selectedTileIndices)"
+                            @click.stop="buildTower(selectedTileIndices!, option)"
+                            style="position: absolute; border: 2px solid rgb(0, 0, 0); z-index: 1000"
+                            :style="{
+                                left: getPosition(...selectedTileIndices!)[0] + option.left -12 + 'px',
+                                top: getPosition(...selectedTileIndices!)[1] + option.top -37+  'px',
+                                height: shopSize + 'px',
+                                width: shopSize + 'px',
+                                backgroundColor: option.color,
+                            }"
+                        ></div>
+                    </div>
+                </div>
             </div>
             <div class="mx-auto">
                 <button class="btn btn-primary shadow-none me-1" :disabled="gameStarted" @click="gameLoop()">step</button>
@@ -93,6 +115,7 @@
                 </button>
             </div>
         </div>
+
         <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%"></svg>
     </div>
 </template>
@@ -114,9 +137,7 @@ export default defineComponent({
                 gold: 100,
                 hp: 10,
             } as type.Player,
-            mouse: {
-                vector: [0, 0] as type.Vector,
-            },
+
             hexagonSize: 50,
             fieldWidth: 30,
             fieldHeight: 15,
@@ -134,8 +155,9 @@ export default defineComponent({
             wave: 0,
             nextWaveSpawning: false,
 
+            selectedTileIndices: null as type.Vector | null,
+
             shopSize: 20,
-            shopShow: false,
             shopPosition: {
                 left: 0,
                 top: 0,
@@ -146,9 +168,9 @@ export default defineComponent({
                 { color: 'blueviolet', type: '1', top: 7, left: -23 },
                 { color: 'darkorange', type: '2', top: 7, left: 27 },
                 { color: 'aquamarine', type: '3', top: -2, left: 2 },
-                // { type: "hill", color: "#754c00", top: 46, left: -23 },
-                // { type: "", color: "#008000", top: 56, left: 2 },
-                // { type: "gras", color: "#008000", top: 46, left: 27 },
+                // { type: 'hill', color: '#754c00', top: 46, left: -23 },
+                // { type: '', color: '#008000', top: 56, left: 2 },
+                // { type: 'grass', color: '#008000', top: 46, left: 27 },
             ] as type.TowerOption[],
         }
     },
@@ -156,16 +178,22 @@ export default defineComponent({
         this.createField()
         this.startGame()
     },
+    computed: {
+        selectedTile(): type.FieldDiv | null {
+            if (!this.selectedTileIndices) return null
+            return this.field[this.selectedTileIndices[0]][this.selectedTileIndices[1]]
+        },
+    },
     methods: {
         //map
         createField() {
             this.field = [] as unknown as type.Field
             for (let row = 0; row < this.fieldWidth; row++) {
-                let fieldRow = []
+                let fieldRow = [] as type.FieldDiv[]
                 for (let hex = 0; hex < this.fieldHeight; hex++) {
                     fieldRow.push({
                         color: '#008000',
-                        type: 'gras',
+                        type: 'grass',
                         id: `${row}|${hex}`,
                     })
                 }
@@ -209,8 +237,8 @@ export default defineComponent({
                     console.log({ field: this.field })
                     while (pointer[0] < this.fieldWidth - 1) {
                         let validPointerNeighbours = []
-                        pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'gras') //get all near fields of type gras
-                        console.log({ gras: pointerNeighbours })
+                        pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'grass') //get all near fields of type grass
+                        console.log({ grass: pointerNeighbours })
                         for (let neighbour of pointerNeighbours) {
                             let cords = this.getFieldIndices(neighbour)
                             let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], 'path')
@@ -241,7 +269,7 @@ export default defineComponent({
         clearPath() {
             this.field.forEach(row =>
                 row.forEach(hex => {
-                    if (hex.type == 'path') hex = { id: hex.id, type: 'gras', color: '#008000' }
+                    if (hex.type == 'path') hex = { id: hex.id, type: 'grass', color: '#008000' }
                 })
             )
         },
@@ -275,7 +303,7 @@ export default defineComponent({
             }
             return found
         },
-        getFieldIndices(pathTile: type.FieldDiv): type.Vector {
+        getFieldIndices(pathTile: type.FieldDiv | type.Tower): type.Vector {
             return pathTile?.id.split('|').map(n => parseInt(n)) as type.Vector
         },
         //game
@@ -359,7 +387,7 @@ export default defineComponent({
         },
         //tower
         buildTower(position: type.Vector, tower: type.TowerOption) {
-            this.shopShow = false
+            this.selectedTileIndices = null
             if (!tower) return
             this.towers.push(this.tower(`${position[0]}|${position[1]}`, tower)!)
             this.player.gold -= this.towers.find(t => t.id == `${position[0]}|${position[1]}`)!.price
@@ -414,43 +442,26 @@ export default defineComponent({
             }
         },
         //buildMenu
-        openBuildMenu(xIndex: number, yIndex: number, e: any) {
-            this.shopShow = true
-            this.mouse.vector = [e.pageX, e.pageY]
-            let clickedField = this.checkClickedField(xIndex, yIndex) as type.Vector
-            let shopArray = this.getPosition(...clickedField)
-            shopArray[0] -= this.shopSize / 2 + 3
-            shopArray[1] -= this.hexagonSize - this.shopSize / 2 - 2
-            this.shopPosition.left = shopArray[0]
-            this.shopPosition.top = shopArray[1]
-            this.shopPosition.position = clickedField
-        },
+        // openBuildMenu(xIndex: number, yIndex: number) {
+        //     let clickedField = this.checkClickedField(xIndex, yIndex) as type.Vector
+        //     let shopArray = this.getPosition(...clickedField)
+        //     shopArray[0] -= this.shopSize / 2 + 3
+        //     shopArray[1] -= this.hexagonSize - this.shopSize / 2 - 2
+        //     this.shopPosition.left = shopArray[0]
+        //     this.shopPosition.top = shopArray[1]
+        //     this.shopPosition.position = clickedField
+        // },
+        // openTowerMenu(xIndex: number, yIndex: number, e: any) {
+        //     // this.upgradingShopShow = true
+        //     // let clickedField = this.checkClickedField(xIndex, yIndex) as type.Vector
+        // },
         //clickField
-        checkClickedField(index: number, index2: number) {
-            if (this.checkField(index, index2)) {
-                return [index, index2]
-            }
-            if (index % 2 != 0) {
-                if (this.checkField(index, index2 - 1)) {
-                    return [index, index2 - 1]
-                }
-                if (this.checkField(index - 1, index2 - 1)) {
-                    return [index - 1, index2 - 1]
-                }
+        checkClickedField(xIndex: number, yIndex: number) {
+            if (this.field[xIndex][yIndex].type != 'path') {
+                return [xIndex, yIndex]
             } else {
-                if (this.checkField(index - 1, index2)) {
-                    return [index - 1, index2]
-                }
-                if (this.checkField(index, index2 - 1)) {
-                    return [index, index2 - 1]
-                }
+                return false
             }
-        },
-        checkField(xIndex: number, yIndex: number) {
-            if (yIndex < 0) return
-            let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
-            if (this.collisionsCheck(this.mouse.vector, this.middlePointRect(rect), 22, 22)) if (this.field[xIndex][yIndex].type != 'path') return [xIndex, yIndex]
-            return false
         },
         //general
         getTower(x: number, y: number): type.Tower | undefined {
@@ -491,8 +502,12 @@ export default defineComponent({
 </script>
 <style lang="scss" scoped>
 .hex {
+    color: var(--color);
+    overflow: hidden;
     position: relative;
-    width: 33px;
+    width: 39px;
+    margin-left: -3px;
+    margin-right: -3px;
     height: 37px;
     font-size: 50px;
     &::before {
@@ -509,6 +524,7 @@ export default defineComponent({
 }
 .attackrange.active::after {
     content: '';
+
     width: calc(2 * var(--range));
     height: calc(2 * var(--range));
     position: absolute;

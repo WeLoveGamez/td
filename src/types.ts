@@ -8,9 +8,8 @@ export type Field = [FieldDiv[]]
 
 export interface FieldDiv {
     color: string
-    type: string
+    type: TileOption['type']
     id: string
-    tower?: Tower
     start?: boolean
     finish?: boolean
 }

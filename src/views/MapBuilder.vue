@@ -36,7 +36,7 @@
                     </li>
                     <li class="d-flex">
                         <div style="width: 30px; height: 20px; background-color: green"></div>
-                        <p class="ms-3">Gras</p>
+                        <p class="ms-3">grass</p>
                     </li>
                     <li class="d-flex">
                         <div style="width: 30px; height: 20px; background-color: blue"></div>
@@ -137,7 +137,7 @@ export default defineComponent({
                 { type: 'water', color: '#0000FF', top: 7, left: 25 },
                 { type: 'hill', color: '#754c00', top: 46, left: -25 },
                 // { type: "", color: "#008000", top: 56, left: 0 },
-                { type: 'gras', color: '#008000', top: 46, left: 25 },
+                { type: 'grass', color: '#008000', top: 46, left: 25 },
             ] as type.TileOption[],
         }
     },
@@ -151,11 +151,11 @@ export default defineComponent({
                 case 'clear':
                     this.field = [] as unknown as type.Field
                     for (let row = 0; row < this.fieldWidth; row++) {
-                        let fieldRow = []
+                        let fieldRow = [] as type.FieldDiv[]
                         for (let hex = 0; hex < this.fieldHeight; hex++) {
                             fieldRow.push({
                                 color: '#008000',
-                                type: 'gras',
+                                type: 'grass',
                                 id: `${row}|${hex}`,
                             })
                         }
@@ -165,7 +165,7 @@ export default defineComponent({
                 case 'pathClear':
                     for (let row = 0; row < this.fieldWidth; row++) {
                         for (let hex = 0; hex < this.fieldHeight; hex++) {
-                            if (this.field[row][hex].type == 'path') this.field[row][hex] = { id: `${row}|${hex}`, type: 'gras', color: '#008000' }
+                            if (this.field[row][hex].type == 'path') this.field[row][hex] = { id: `${row}|${hex}`, type: 'grass', color: '#008000' }
                         }
                     }
                     break
@@ -209,8 +209,8 @@ export default defineComponent({
                     console.log({ field: this.field })
                     while (pointer[0] < this.fieldWidth - 1) {
                         let validPointerNeighbours = []
-                        pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'gras') //get all near fields of type gras
-                        console.log({ gras: pointerNeighbours })
+                        pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'grass') //get all near fields of type grass
+                        console.log({ grass: pointerNeighbours })
                         for (let neighbour of pointerNeighbours) {
                             let cords = this.getPathIndeces(neighbour)
                             let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], 'path')
@@ -240,7 +240,7 @@ export default defineComponent({
                 this.field[this.getPathIndeces(h)[0]][this.getPathIndeces(h)[1]] = hex
             })
         },
-        findNeighbourFields(x: number, y: number, type: string) {
+        findNeighbourFields(x: number, y: number, type: type.TileOption['type']) {
             let neighbours0 = [
                 { dir: 'up', x: 0, y: -1 },
                 { dir: 'down', x: 0, y: 1 },
@@ -276,7 +276,7 @@ export default defineComponent({
         clearPath() {
             this.field.forEach(row =>
                 row.forEach(hex => {
-                    if (hex.type == 'path') hex = { id: hex.id, type: 'gras', color: '#008000' }
+                    if (hex.type == 'path') hex = { id: hex.id, type: 'grass', color: '#008000' }
                 })
             )
         },
@@ -294,7 +294,7 @@ export default defineComponent({
             this.shopPosition.position = clickedField
         },
         //mapEditing
-        changeHex(xIndex: number, yIndex: number, type: 'path' | 'water' | 'hill' | 'grass') {
+        changeHex(xIndex: number, yIndex: number, type: type.FieldDiv['type']) {
             this.field[xIndex][yIndex].type = type
             this.field[xIndex][yIndex].color = this.Options.find(o => o.type == type)!.color
         },
