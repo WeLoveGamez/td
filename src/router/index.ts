@@ -1,33 +1,40 @@
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
-import Game from '../views/Game.vue'
-import MapBuilder from '@/views/MapBuilder.vue'
-import Register from '@/views/Register.vue'
-import Login from '@/views/Login.vue'
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth'
-import { ref } from 'vue'
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
+import Game from "../views/Game.vue";
+import MapBuilder from "@/views/MapBuilder.vue";
+import Register from "@/views/Register.vue";
+import Login from "@/views/Login.vue";
+import Main from "@/views/Main.vue";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { ref } from "vue";
 
 const routes: Array<RouteRecordRaw> = [
-    {
-        path: '/game',
-        name: 'Game',
-        component: Game,
-    },
-    {
-        path: '/login',
-        name: 'Login',
-        component: Login,
-    },
-    {
-        path: '/register',
-        name: 'Register',
-        component: Register,
-    },
-    {
-        path: '/MapBuilder',
-        name: 'MapBuilder',
-        component: MapBuilder,
-    },
-]
+  {
+    path: "/",
+    name: "Login",
+    component: Login,
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: Register,
+  },
+  {
+    path: "/main",
+    name: "Main",
+    component: Main,
+  },
+  {
+    path: "/game",
+    name: "Game",
+    component: Game,
+  },
+  {
+    path: "/MapBuilder",
+    name: "MapBuilder",
+    component: MapBuilder,
+  },
+];
+
 
 const router = createRouter({
     history: createWebHashHistory(),

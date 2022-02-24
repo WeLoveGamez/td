@@ -46,7 +46,7 @@ export default defineComponent({
         console.log("logged in with:" + this.email);
         this.email = "";
         this.password = "";
-        this.$router.push("/game");
+        this.$router.push("/main");
       } catch (e) {
         console.error({ "couldn't login": e });
       } finally {
