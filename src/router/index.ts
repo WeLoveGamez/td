@@ -35,35 +35,36 @@ const routes: Array<RouteRecordRaw> = [
   },
 ];
 
-const router = createRouter({
-  history: createWebHashHistory(),
-  routes,
-});
 
-export const currentUser = ref<User | null>(null);
+const router = createRouter({
+    history: createWebHashHistory(),
+    routes,
+})
+
+export const currentUser = ref<User | null>(null)
 
 const getCurrentUser = () => {
-  const auth = getAuth();
-  return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      user => {
-        currentUser.value = user;
-        unsubscribe();
-        resolve(user);
-      },
-      reject
-    );
-  });
-};
+    const auth = getAuth()
+    return new Promise((resolve, reject) => {
+        const unsubscribe = onAuthStateChanged(
+            auth,
+            user => {
+                currentUser.value = user
+                unsubscribe()
+                resolve(user)
+            },
+            reject
+        )
+    })
+}
 
 router.beforeEach(async (to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  if (!(await getCurrentUser()) && requiresAuth) {
-    next("/login");
-  } else {
-    next();
-  }
-});
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+    if (!(await getCurrentUser()) && requiresAuth) {
+        next('/login')
+    } else {
+        next()
+    }
+})
 
-export default router;
+export default router
