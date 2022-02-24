@@ -1,6 +1,6 @@
 <template>
     <Navbar></Navbar>
-    <div @click="shopShow = false" class="flex-1">
+    <div @click="shopShow = false" class="flex-1" style="height: 100vh">
         <div class="d-flex mx-5 justify-content-around">
             <div>
                 gold:
