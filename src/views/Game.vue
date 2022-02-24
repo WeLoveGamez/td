@@ -21,7 +21,16 @@
                             class="hex attackrange"
                             :class="{ active: shopShow }"
                             :id="xIndex + '|' + yIndex + ''"
-                        ></div>
+                        >
+                            <Teleport to="#polylineContainer">
+                                <polyline
+                                    v-if="getTower(xIndex, yIndex)?.target"
+                                    :points="`${getPosition(...getFieldIndices(getTower(xIndex, yIndex)!)).join(', ')} ${getEnemyPosition(getTower(xIndex, yIndex)!.target!)?.join(', ')}`"
+                                    fill="none"
+                                    stroke="red"
+                                />
+                            </Teleport>
+                        </div>
                         <div
                             v-else
                             :style="{
@@ -37,12 +46,31 @@
                     :key="JSON.stringify(enemy)"
                     style="position: absolute; background-color: blue; border-radius: 50%"
                     :style="{
-                        left: enemy.cords[0] - (Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5) / 2 + 'px',
-                        top: enemy.cords[1] - (Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5) / 2 + 'px',
-                        height: Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5 + 'px',
-                        width: Math.log(enemy.size * percent(enemy.maxHP - enemy.HP, 'de')) * 5 + 'px',
+                        left: enemy.cords[0] - enemy.size / 2 + 'px',
+                        top: enemy.cords[1] - enemy.size / 2 + 'px',
+                        height: enemy.size + 'px',
+                        width: enemy.size + 'px',
                     }"
-                ></div>
+                >
+                    <Teleport to="#polylineContainer">
+                        <!-- enemy hp bar -->
+                        <polyline
+                            :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size},${enemy.cords[1] - enemy.size}`"
+                            fill="none"
+                            stroke="black"
+                            stroke-width="3px"
+                        />
+                        <polyline
+                            :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${
+                                enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP
+                            },${enemy.cords[1] - enemy.size}`"
+                            fill="none"
+                            stroke="red"
+                            stroke-width="3px"
+                        />
+                        <!--  -->
+                    </Teleport>
+                </div>
             </div>
             <div v-for="option in towerOptions" :key="option.type">
                 <div
@@ -65,15 +93,7 @@
                 </button>
             </div>
         </div>
-        <svg style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
-            <polyline
-                v-for="tower of towers.filter(t => t.target)"
-                :key="tower.id"
-                :points="`${getPosition(...getFieldIndices(tower)).join(', ')} ${getEnemyPosition(tower.target!)?.join(', ')}`"
-                fill="none"
-                stroke="red"
-            />
-        </svg>
+        <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%"></svg>
     </div>
 </template>
 
@@ -305,7 +325,7 @@ export default defineComponent({
                 id: JSON.stringify(Math.random()),
                 maxHP: 100 * this.wave ** 0.5,
                 HP: 100 * this.wave ** 0.5,
-                size: 20,
+                size: 16,
                 nextPathNumber: 1,
                 speed: 1.5,
             } as type.Enemy
