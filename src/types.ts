@@ -10,6 +10,7 @@ export interface FieldDiv {
     color: string
     type: TileOption['type']
     id: string
+    tower?: Tower
     start?: boolean
     finish?: boolean
 }
@@ -31,7 +32,7 @@ export interface Tower {
     range: number
     price: number
     color: string
-    type: '1' | '2' | '3'
+    type: 'sniper' | 'ballista' | 'laser'
     id: string
     target: string | null
 }
@@ -57,7 +58,7 @@ export interface TileOption extends ShopOption {
     type: 'path' | 'water' | 'hill' | 'grass'
 }
 export interface TowerOption extends ShopOption {
-    type: '1' | '2' | '3'
+    type: 'sniper' | 'ballista' | 'laser'
 }
 
 export type Vector = [number, number]

@@ -18,7 +18,6 @@
                                 '--color': getTower(xIndex, yIndex)?.color,
                             }"
                             class="hex attackrange"
-                            :class="{ active: selectedTileIndices }"
                             :id="xIndex + '|' + yIndex + ''"
                         >
                             <Teleport to="#polylineContainer">
@@ -27,6 +26,14 @@
                                     :points="`${getPosition(...getFieldIndices(getTower(xIndex, yIndex)!)).join(', ')} ${getEnemyPosition(getTower(xIndex, yIndex)!.target!)?.join(', ')}`"
                                     fill="none"
                                     stroke="red"
+                                />
+                                <circle
+                                    v-if="selectedTile"
+                                    :cx="getPosition(xIndex, yIndex)[0]"
+                                    :cy="getPosition(xIndex, yIndex)[1]"
+                                    :r="getTower(xIndex, yIndex)?.range"
+                                    fill="none"
+                                    :stroke="getTower(xIndex, yIndex)?.color"
                                 />
                             </Teleport>
                         </div>
@@ -86,14 +93,19 @@
                             }"
                         >
                             <div id="shop">
-                                <div class="card w-100">
-                                    <div class="card card-header"></div>
-                                    <div class="card card-body"></div>
+                                <div class="card w-100 text-dark">
+                                    <div class="card card-header">{{ option.type }}</div>
+                                    <div class="card card-body">
+                                        <div>price:{{ tower('0', option).price }}</div>
+                                        <div>range:{{ tower('0', option).range }}</div>
+                                        <div>attackspeed:{{ tower('0', option).atkspeed }}</div>
+                                        <div>atk:{{ tower('0', option).atk }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div
+                        <!-- <div
                             v-if="getTower(...selectedTileIndices)"
                             @click.stop="buildTower(selectedTileIndices!, option)"
                             style="position: absolute; border: 2px solid rgb(0, 0, 0); z-index: 1000"
@@ -104,13 +116,13 @@
                                 width: shopSize + 'px',
                                 backgroundColor: option.color,
                             }"
-                        ></div>
+                        ></div> -->
                     </div>
                 </div>
             </div>
-            <div class="mx-auto">
-                <button class="btn btn-primary shadow-none me-1" :disabled="gameStarted" @click="gameLoop()">step</button>
-                <button class="btn btn-primary shadow-none me-1" @click="gameStarted = !gameStarted">
+            <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
+                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
+                <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
                 </button>
             </div>
@@ -165,9 +177,9 @@ export default defineComponent({
             },
 
             towerOptions: [
-                { color: 'blueviolet', type: '1', top: 7, left: -23 },
-                { color: 'darkorange', type: '2', top: 7, left: 27 },
-                { color: 'aquamarine', type: '3', top: -2, left: 2 },
+                { color: '#FF0000', type: 'sniper', top: 7, left: -23 },
+                { color: '#00FF00', type: 'ballista', top: 7, left: 27 },
+                { color: '#0000FF', type: 'laser', top: -2, left: 2 },
                 // { type: 'hill', color: '#754c00', top: 46, left: -23 },
                 // { type: '', color: '#008000', top: 56, left: 2 },
                 // { type: 'grass', color: '#008000', top: 46, left: 27 },
@@ -395,23 +407,23 @@ export default defineComponent({
         tower(id: string, tower: type.TowerOption): type.Tower {
             return {
                 ...{
-                    '1': {
-                        atk: 10,
-                        range: 150,
+                    sniper: {
+                        atk: 30,
+                        range: 500,
                         atkspeed: 1,
                         price: 20,
                     },
-                    '2': {
-                        atk: 10,
+                    ballista: {
+                        atk: 15,
                         range: 150,
                         atkspeed: 3,
-                        price: 20,
+                        price: 25,
                     },
-                    '3': {
-                        atk: 10,
+                    laser: {
+                        atk: 5,
                         range: 150,
                         atkspeed: 10,
-                        price: 20,
+                        price: 30,
                     },
                 }[tower.type],
 
@@ -441,21 +453,8 @@ export default defineComponent({
                 this.enemies.find(e => e.id == tower.target)!.HP -= tower.atk
             }
         },
-        //buildMenu
-        // openBuildMenu(xIndex: number, yIndex: number) {
-        //     let clickedField = this.checkClickedField(xIndex, yIndex) as type.Vector
-        //     let shopArray = this.getPosition(...clickedField)
-        //     shopArray[0] -= this.shopSize / 2 + 3
-        //     shopArray[1] -= this.hexagonSize - this.shopSize / 2 - 2
-        //     this.shopPosition.left = shopArray[0]
-        //     this.shopPosition.top = shopArray[1]
-        //     this.shopPosition.position = clickedField
-        // },
-        // openTowerMenu(xIndex: number, yIndex: number, e: any) {
-        //     // this.upgradingShopShow = true
-        //     // let clickedField = this.checkClickedField(xIndex, yIndex) as type.Vector
-        // },
-        //clickField
+
+        //general
         checkClickedField(xIndex: number, yIndex: number) {
             if (this.field[xIndex][yIndex].type != 'path') {
                 return [xIndex, yIndex]
@@ -463,8 +462,8 @@ export default defineComponent({
                 return false
             }
         },
-        //general
         getTower(x: number, y: number): type.Tower | undefined {
+            // return this.field[x][y].tower
             return this.towers.find(t => this.getFieldIndices(t)[0] == x && this.getFieldIndices(t)[1] == y)
         },
         getPosition(xIndex: number, yIndex: number) {
@@ -522,17 +521,19 @@ export default defineComponent({
         position: absolute;
     }
 }
-.attackrange.active::after {
-    content: '';
-
-    width: calc(2 * var(--range));
-    height: calc(2 * var(--range));
-    position: absolute;
-    border-radius: 50%;
-    border: 3px solid var(--color);
-    transform: translate(-50%, -50%);
-    top: 50%;
-    left: 50%;
-    z-index: 2;
-}
+// .attackrange.active::after {
+//     content: '';
+//     width: calc(2 * var(--range));
+//     height: calc(2 * var(--range));
+//     min-width: calc(2 * var(--range));
+//     min-height: calc(2 * var(--range));
+//     position: absolute;
+//     border-radius: 50%;
+//     border: 3px solid var(--color);
+//     transform: translate(-50%, -50%);
+//     top: 50%;
+//     left: 50%;
+//     z-index: 2;
+// }
+//
 </style>
