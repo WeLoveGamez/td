@@ -121,6 +121,7 @@
                 </div>
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
+                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button>
                 <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
                 <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
@@ -279,9 +280,10 @@ export default defineComponent({
             })
         },
         clearPath() {
-            this.field.forEach(row =>
-                row.forEach(hex => {
-                    if (hex.type == 'path') hex = { id: hex.id, type: 'grass', color: '#008000' }
+            this.path = []
+            this.field.forEach((row, x) =>
+                row.forEach((hex, y) => {
+                    if (hex.type == 'path') this.field[x][y] = { id: hex.id, type: 'grass', color: '#008000' }
                 })
             )
         },
@@ -332,7 +334,20 @@ export default defineComponent({
             this.towerAction()
             this.gamelooptick++
         },
-
+        testSetup() {
+            this.clearPath()
+            this.wave = 10
+            for (let i = 0; i < this.fieldWidth; i++) {
+                this.field[i][7] = this.pathfield(`${i}|${7}`, false, false)
+                this.path.push(this.pathfield(`${i}|${7}`, false, false))
+            }
+            for (let i = 0; i < this.fieldWidth; i++) {
+                this.buildTower([i, 8], this.towerOptions[2])
+            }
+            for (let i = 0; i < this.fieldWidth; i++) {
+                this.buildTower([i, 6], this.towerOptions[2])
+            }
+        },
         //controls
         movement() {
             this.moveEnemy()
