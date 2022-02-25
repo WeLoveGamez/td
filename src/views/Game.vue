@@ -10,20 +10,20 @@
 
             <div class="d-flex justify-content-center mt-3">
                 <div v-for="(row, xIndex) in field" :key="JSON.stringify(row)" :style="{ marginTop: xIndex % 2 == 0 ? `${18}px` : 0 + 'px' }">
-                    <div v-for="(hex, yIndex) in row" :key="hex.id" @click.stop="selectedTileIndices = [xIndex, yIndex]">
+                    <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
                         <div
-                            v-if="getTower(xIndex, yIndex)"
+                            v-if="field[xIndex][yIndex].tower"
                             :style="{
-                                '--range': getTower(xIndex, yIndex)?.range + 'px',
-                                '--color': getTower(xIndex, yIndex)?.color,
+                                '--range': hex.tower?.range + 'px',
+                                '--color': hex.tower?.color,
                             }"
                             class="hex attackrange"
                             :id="xIndex + '|' + yIndex + ''"
                         >
                             <Teleport to="#polylineContainer">
                                 <polyline
-                                    v-if="getTower(xIndex, yIndex)?.target"
-                                    :points="`${getPosition(...getFieldIndices(getTower(xIndex, yIndex)!)).join(', ')} ${getEnemyPosition(getTower(xIndex, yIndex)!.target!)?.join(', ')}`"
+                                    v-if="hex.tower?.target"
+                                    :points="`${getPosition(xIndex, yIndex).join(', ')} ${getEnemyPosition(hex.tower.target)?.join(', ')}`"
                                     fill="none"
                                     stroke="red"
                                 />
@@ -31,9 +31,9 @@
                                     v-if="selectedTile"
                                     :cx="getPosition(xIndex, yIndex)[0]"
                                     :cy="getPosition(xIndex, yIndex)[1]"
-                                    :r="getTower(xIndex, yIndex)?.range"
+                                    :r="hex.tower?.range"
                                     fill="none"
-                                    :stroke="getTower(xIndex, yIndex)?.color"
+                                    :stroke="hex.tower?.color"
                                 />
                             </Teleport>
                         </div>
@@ -96,31 +96,19 @@
                                 <div class="card w-100 text-dark">
                                     <div class="card card-header">{{ option.type }}</div>
                                     <div class="card card-body">
-                                        <div>price:{{ tower('0', option).price }}</div>
-                                        <div>range:{{ tower('0', option).range }}</div>
-                                        <div>attackspeed:{{ tower('0', option).atkspeed }}</div>
-                                        <div>atk:{{ tower('0', option).atk }}</div>
+                                        <div>price:{{ tower([0, 0], option).price }}</div>
+                                        <div>range:{{ tower([0, 0], option).range }}</div>
+                                        <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
+                                        <div>atk:{{ tower([0, 0], option).atk }}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- <div
-                            v-if="getTower(...selectedTileIndices)"
-                            @click.stop="buildTower(selectedTileIndices!, option)"
-                            style="position: absolute; border: 2px solid rgb(0, 0, 0); z-index: 1000"
-                            :style="{
-                                left: getPosition(...selectedTileIndices!)[0] + option.left -12 + 'px',
-                                top: getPosition(...selectedTileIndices!)[1] + option.top -37+  'px',
-                                height: shopSize + 'px',
-                                width: shopSize + 'px',
-                                backgroundColor: option.color,
-                            }"
-                        ></div> -->
                     </div>
                 </div>
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
+                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="reset()">reset</button>
                 <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button>
                 <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
                 <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
@@ -161,7 +149,7 @@ export default defineComponent({
             path: [] as type.FieldDiv[],
 
             enemies: [] as type.Enemy[],
-            towers: [] as type.Tower[],
+            // towers: [] as type.Tower[],
 
             gameStarted: false,
             gamelooptick: 0,
@@ -196,8 +184,24 @@ export default defineComponent({
             if (!this.selectedTileIndices) return null
             return this.field[this.selectedTileIndices[0]][this.selectedTileIndices[1]]
         },
+        towers(): type.Tower[] {
+            return this.field
+                .flat()
+                .filter(f => f.tower)
+                .map(e => e.tower!)
+        },
     },
     methods: {
+        //reset
+        reset() {
+            this.gameStarted = false
+            this.gamelooptick = 0
+            this.wave = 0
+            this.field = [] as unknown as type.Field
+            this.enemies = []
+            this.path = []
+            this.createField()
+        },
         //map
         createField() {
             this.field = [] as unknown as type.Field
@@ -207,83 +211,69 @@ export default defineComponent({
                     fieldRow.push({
                         color: '#008000',
                         type: 'grass',
-                        id: `${row}|${hex}`,
+                        indices: [row, hex],
                     })
                 }
                 this.field.push(fieldRow)
             }
             this.generatePath('basic')
         },
-        generatePath(type: 'basic' | 'complex', clear?: boolean) {
-            let pointer = [0, this.getRandomInt(this.fieldHeight - 1)]
-            this.path = []
-            this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false))
+        generatePath(type: 'basic' | 'complex') {
+            this.clearPath()
+            let [x, y] = [0, this.getRandomInt(this.fieldHeight - 1)] as type.Vector
+            this.path = [] as type.FieldDiv[]
+            this.path.push(this.pathfield([x, y], true, false))
             let pointerNeighbours = []
 
             switch (type) {
                 case 'basic':
-                    if (clear !== false) this.clearPath()
-                    this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false)
-                    while (pointer[0] < this.fieldWidth - 2) {
+                    this.field[x][y] = this.pathfield([x, y], true, false)
+                    while (x < this.fieldWidth - 2) {
                         switch (this.getRandomInt(2)) {
                             case 0:
-                                if (pointer[0] % 2 == 0) pointer[1]++
-                                if (pointer[1] == this.fieldHeight) pointer[1]--
+                                if (x % 2 == 0) y++
+                                if (y == this.fieldHeight) y--
                                 break
                             case 1:
-                                if (pointer[0] % 2 != 0) pointer[1]--
-                                if (pointer[1] < 0) pointer[1]++
+                                if (x % 2 != 0) y--
+                                if (y < 0) y++
                                 break
                         }
-                        pointer[0]++
-                        this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false)
-                        this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false))
+                        x++
+                        this.field[x][y] = this.pathfield([x, y], false, false)
+                        this.path.push(this.pathfield([x, y], false, false))
                     }
-                    this.field[pointer[0] + 1][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true)
-                    this.path.push(this.pathfield(`${pointer[0] + 1}|${pointer[1]}`, false, true))
 
+                    this.field[x + 1][y] = this.pathfield([x + 1, y], false, true)
+                    this.path.push(this.pathfield([x + 1, y], false, true))
                     break
 
                 case 'complex':
-                    this.clearPath()
-                    this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false)
-                    console.log({ field: this.field })
-                    while (pointer[0] < this.fieldWidth - 1) {
+                    this.field[x][y] = this.pathfield([x, y], true, false)
+                    while (x < this.fieldWidth - 1) {
                         let validPointerNeighbours = []
-                        pointerNeighbours = this.findNeighbourFields(pointer[0], pointer[1], 'grass') //get all near fields of type grass
-                        console.log({ grass: pointerNeighbours })
+                        pointerNeighbours = this.findNeighbourFields(x, y, 'grass') //get all near fields of type grass
                         for (let neighbour of pointerNeighbours) {
-                            let cords = this.getFieldIndices(neighbour)
+                            let cords = neighbour.indices
                             let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], 'path')
-                            console.log({ cords, path: neighboursPaths })
 
                             if (neighboursPaths.length == 1) validPointerNeighbours.push(neighbour)
                         }
-                        console.log({ validPointerNeighbours })
                         if (validPointerNeighbours.length == 0) break
                         let random = this.getRandomInt(validPointerNeighbours.length - 1)
                         let nextPath = validPointerNeighbours[random]
-                        let nextCords = this.getFieldIndices(nextPath)
-                        this.field[nextCords[0]][nextCords[1]] = this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false)
-                        this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false))
-                        pointer = nextCords
+                        let nextCords = nextPath.indices
+                        this.field[nextCords[0]][nextCords[1]] = this.pathfield(nextCords, false, false)
+                        this.path.push(this.pathfield(nextCords, false, false))
+                        ;[x, y] = nextCords
                     }
             }
-        },
-        applyPath() {
-            this.path.forEach(h => {
-                this.field[this.getFieldIndices(h)[0]][this.getFieldIndices(h)[1]] = this.pathfield(
-                    `${this.getFieldIndices(h)[0]}|${this.getFieldIndices(h)[1]}`,
-                    true,
-                    false
-                )
-            })
         },
         clearPath() {
             this.path = []
             this.field.forEach((row, x) =>
                 row.forEach((hex, y) => {
-                    if (hex.type == 'path') this.field[x][y] = { id: hex.id, type: 'grass', color: '#008000' }
+                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '#008000' }
                 })
             )
         },
@@ -310,15 +300,10 @@ export default defineComponent({
             for (let neighbour of neighbours) {
                 let targetX = x + neighbour.x
                 let targetY = y + neighbour.y
-                console.log({ targetX, targetY })
                 if (!(targetX < 0 || targetY < 0 || targetX > this.fieldWidth - 1 || targetY > this.fieldHeight - 1) && this.field[targetX][targetY].type == type)
                     found.push(this.field[targetX][targetY])
-                console.log({ x, y, neighbour })
             }
             return found
-        },
-        getFieldIndices(pathTile: type.FieldDiv | type.Tower): type.Vector {
-            return pathTile?.id.split('|').map(n => parseInt(n)) as type.Vector
         },
         //game
         startGame() {
@@ -338,8 +323,8 @@ export default defineComponent({
             this.clearPath()
             this.wave = 10
             for (let i = 0; i < this.fieldWidth; i++) {
-                this.field[i][7] = this.pathfield(`${i}|${7}`, false, false)
-                this.path.push(this.pathfield(`${i}|${7}`, false, false))
+                this.field[i][7] = this.pathfield([i, 7], false, false)
+                this.path.push(this.pathfield([i, 7], false, false))
             }
             for (let i = 0; i < this.fieldWidth; i++) {
                 this.buildTower([i, 8], this.towerOptions[2])
@@ -376,13 +361,14 @@ export default defineComponent({
         },
         createEnemy() {
             let enemy = {
-                cords: this.getPosition(...this.getFieldIndices(this.path[0])),
+                cords: this.getPosition(...this.path[0].indices),
                 id: JSON.stringify(Math.random()),
                 maxHP: 100 * this.wave ** 0.5,
                 HP: 100 * this.wave ** 0.5,
                 size: 16,
                 nextPathNumber: 1,
                 speed: 1.5,
+                distanceTravelled: 0,
             } as type.Enemy
             this.enemies.push(enemy)
         },
@@ -397,9 +383,10 @@ export default defineComponent({
         moveEnemy() {
             for (let enemy of this.enemies) {
                 if (enemy.nextPathNumber < this.path.length) {
-                    let targetPosition = this.getPosition(...this.getFieldIndices(this.path[enemy.nextPathNumber]))
+                    let targetPosition = this.getPosition(...this.path[enemy.nextPathNumber].indices)
                     let movement = subtract(targetPosition, enemy.cords)
                     enemy.cords = add(enemy.cords, divide(movement, length(movement) / enemy.speed))
+                    enemy.distanceTravelled += length(divide(movement, length(movement) / enemy.speed))
                     if (lengthSquared(subtract(enemy.cords, targetPosition)) < enemy.speed ** 2) {
                         enemy.nextPathNumber++
                     }
@@ -416,10 +403,11 @@ export default defineComponent({
         buildTower(position: type.Vector, tower: type.TowerOption) {
             this.selectedTileIndices = null
             if (!tower) return
-            this.towers.push(this.tower(`${position[0]}|${position[1]}`, tower)!)
-            this.player.gold -= this.towers.find(t => t.id == `${position[0]}|${position[1]}`)!.price
+            let newTower = this.tower([position[0], position[1]], tower)
+            this.field[position[0]][position[1]].tower = newTower
+            this.player.gold -= newTower.price
         },
-        tower(id: string, tower: type.TowerOption): type.Tower {
+        tower(indices: type.Vector, tower: type.TowerOption): type.Tower {
             return {
                 ...{
                     sniper: {
@@ -445,27 +433,50 @@ export default defineComponent({
                 atkrdy: true,
                 color: tower.color,
                 type: tower.type,
-                id: id,
+                indices: indices,
                 target: null,
+                filter: 'closest',
             }
         },
         getTowerTargets() {
             for (let t of this.towers) {
-                let rect = document.getElementById(t.id)!.getBoundingClientRect()
-                let newTarget = this.enemies
-                    .sort((a, b) =>
-                        lengthSquared(subtract(this.middlePointRect(rect), subtract(a.cords, b.size / 2))) <
-                        lengthSquared(subtract(this.middlePointRect(rect), subtract(b.cords, b.size / 2)))
-                            ? -1
-                            : 1
-                    )
-                    .filter(enemy => lengthSquared(subtract(this.middlePointRect(rect), subtract(enemy.cords, enemy.size / 2))) < t.range ** 2)[0]
-                t.target = newTarget?.id ?? null
+                let rect = document.getElementById(`${t.indices[0]}|${t.indices[1]}`)!.getBoundingClientRect()
+                let target = this.enemies[0] as type.Enemy | null
+                for (let enemy of this.enemies) {
+                    if (target && lengthSquared(subtract(this.middlePointRect(rect), subtract(enemy.cords, enemy.size / 2))) < t.range ** 2) {
+                        switch (t.filter as type.Tower['filter']) {
+                            case 'first': {
+                                if (enemy.distanceTravelled > target.distanceTravelled) {
+                                    target = enemy
+                                }
+                                break
+                            }
+                            case 'last': {
+                                if (enemy.distanceTravelled < target.distanceTravelled) {
+                                    target = enemy
+                                }
+                                break
+                            }
+                            case 'closest': {
+                                if (
+                                    lengthSquared(subtract(this.middlePointRect(rect), subtract(enemy.cords, enemy.size / 2))) <
+                                    lengthSquared(subtract(this.middlePointRect(rect), subtract(target.cords, target.size / 2)))
+                                ) {
+                                    target = enemy
+                                }
+                                break
+                            }
+                        }
+                        this.field[t.indices[0]][t.indices[1]].tower!.target = target?.id ?? null
+                    }
+                }
             }
         },
         towerAttack() {
-            for (let tower of this.towers.filter(t => t.target).filter(t => this.gamelooptick % (60 / t.atkspeed) == 0)) {
-                this.enemies.find(e => e.id == tower.target)!.HP -= tower.atk
+            for (let tower of this.towers.filter(t => this.gamelooptick % (60 / t.atkspeed) == 0)) {
+                let Index = this.enemies.findIndex(e => e.id == tower.target)
+                if (Index != -1) this.enemies[Index].HP -= tower.atk
+                if (this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
             }
         },
 
@@ -477,10 +488,6 @@ export default defineComponent({
                 return false
             }
         },
-        getTower(x: number, y: number): type.Tower | undefined {
-            // return this.field[x][y].tower
-            return this.towers.find(t => this.getFieldIndices(t)[0] == x && this.getFieldIndices(t)[1] == y)
-        },
         getPosition(xIndex: number, yIndex: number) {
             let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
             return this.middlePointRect(rect)
@@ -488,7 +495,7 @@ export default defineComponent({
         getEnemyPosition(id: string) {
             let enemy = this.enemies.find(e => e.id == id)
             if (!enemy) return
-            return enemy?.cords
+            return enemy.cords
         },
         checkPrice(price: number) {
             if (price <= this.player.gold) {
@@ -497,8 +504,8 @@ export default defineComponent({
             }
             return false
         },
-        pathfield(id: string, start: boolean, finish: boolean): type.FieldDiv {
-            return { color: '#555555', type: 'path', id: id, start: start, finish: finish }
+        pathfield(indices: type.Vector, start: boolean, finish: boolean): type.FieldDiv {
+            return { color: '#555555', type: 'path', indices: indices, start: start, finish: finish }
         },
 
         middlePointRect(rect: type.Rect) {

@@ -9,7 +9,7 @@ export type Field = [FieldDiv[]]
 export interface FieldDiv {
     color: string
     type: TileOption['type']
-    id: string
+    indices: Vector
     tower?: Tower
     start?: boolean
     finish?: boolean
@@ -23,6 +23,7 @@ export interface Enemy {
     id: string
     nextPathNumber: number
     speed: number
+    distanceTravelled: number
 }
 
 export interface Tower {
@@ -33,8 +34,9 @@ export interface Tower {
     price: number
     color: string
     type: 'sniper' | 'ballista' | 'laser'
-    id: string
+    indices: Vector
     target: string | null
+    filter: 'first' | 'last' | 'closest' | 'mostHealthy' | 'mostWounded' | 'slowest' | 'fastest'
 }
 export interface Player {
     gold: number

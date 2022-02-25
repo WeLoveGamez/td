@@ -156,7 +156,7 @@ export default defineComponent({
                             fieldRow.push({
                                 color: '#008000',
                                 type: 'grass',
-                                id: `${row}|${hex}`,
+                                indices: [row, hex],
                             })
                         }
                         this.field.push(fieldRow)
@@ -165,7 +165,7 @@ export default defineComponent({
                 case 'pathClear':
                     for (let row = 0; row < this.fieldWidth; row++) {
                         for (let hex = 0; hex < this.fieldHeight; hex++) {
-                            if (this.field[row][hex].type == 'path') this.field[row][hex] = { id: `${row}|${hex}`, type: 'grass', color: '#008000' }
+                            if (this.field[row][hex].type == 'path') this.field[row][hex] = { indices: [row, hex], type: 'grass', color: '#008000' }
                         }
                     }
                     break
@@ -177,15 +177,15 @@ export default defineComponent({
             }
         },
         async generatePath(type: 'basic' | 'complex', clear?: boolean) {
-            let pointer = [0, this.getRandomInt(this.fieldHeight - 1)]
+            let pointer = [0, this.getRandomInt(this.fieldHeight - 1)] as type.Vector
             this.path = []
-            this.path.push(this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false))
+            this.path.push(this.pathfield(pointer, true, false))
             let pointerNeighbours = []
 
             switch (type) {
                 case 'basic':
                     if (clear !== false) this.renderField('pathClear')
-                    this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false)
+                    this.field[pointer[0]][pointer[1]] = this.pathfield(pointer, true, false)
                     while (pointer[0] < this.fieldWidth - 2) {
                         switch (this.getRandomInt(2)) {
                             case 0:
@@ -198,14 +198,14 @@ export default defineComponent({
                                 break
                         }
                         pointer[0]++
-                        this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, false)
+                        this.field[pointer[0]][pointer[1]] = this.pathfield(pointer, false, false)
                     }
-                    this.field[pointer[0] + 1][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, false, true)
+                    this.field[pointer[0] + 1][pointer[1]] = this.pathfield(pointer, false, true)
                     break
 
                 case 'complex':
                     this.renderField('pathClear')
-                    this.field[pointer[0]][pointer[1]] = this.pathfield(`${pointer[0]}|${pointer[1]}`, true, false)
+                    this.field[pointer[0]][pointer[1]] = this.pathfield(pointer, true, false)
                     console.log({ field: this.field })
                     while (pointer[0] < this.fieldWidth - 1) {
                         let validPointerNeighbours = []
@@ -223,8 +223,8 @@ export default defineComponent({
                         let random = this.getRandomInt(validPointerNeighbours.length - 1)
                         let nextPath = validPointerNeighbours[random]
                         let nextCords = this.getPathIndeces(nextPath)
-                        this.field[nextCords[0]][nextCords[1]] = this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false)
-                        this.path.push(this.pathfield(`${nextCords[0]}|${nextCords[1]}`, false, false))
+                        this.field[nextCords[0]][nextCords[1]] = this.pathfield(nextCords, false, false)
+                        this.path.push(this.pathfield(nextCords, false, false))
                         pointer = nextCords
                     }
                     if (this.path.length < this.pathLength && this.counter < 1000) {
@@ -236,7 +236,7 @@ export default defineComponent({
         },
         applyPath() {
             this.path.forEach(h => {
-                let hex = this.pathfield(`${this.getPathIndeces(h)[0]}|${this.getPathIndeces(h)[1]}`, true, false)
+                let hex = this.pathfield(this.getPathIndeces(h), true, false)
                 this.field[this.getPathIndeces(h)[0]][this.getPathIndeces(h)[1]] = hex
             })
         },
@@ -270,13 +270,13 @@ export default defineComponent({
             }
             return found
         },
-        getPathIndeces(pathTile: type.FieldDiv): number[] {
-            return pathTile?.id.split('|').map(n => parseInt(n))
+        getPathIndeces(pathTile: type.FieldDiv): type.Vector {
+            return pathTile?.indices
         },
         clearPath() {
-            this.field.forEach(row =>
-                row.forEach(hex => {
-                    if (hex.type == 'path') hex = { id: hex.id, type: 'grass', color: '#008000' }
+            this.field.forEach((row, x) =>
+                row.forEach((hex, y) => {
+                    if (hex.type == 'path') hex = { indices: [x, y], type: 'grass', color: '#008000' }
                 })
             )
         },
@@ -348,8 +348,8 @@ export default defineComponent({
         error(msg: string) {
             console.error(msg)
         },
-        pathfield(id: string, start: boolean, finish: boolean): type.FieldDiv {
-            return { color: this.Options[0].color, type: 'path', id: id, start: start, finish: finish }
+        pathfield(indices: type.Vector, start: boolean, finish: boolean): type.FieldDiv {
+            return { color: this.Options[0].color, type: 'path', indices: indices, start: start, finish: finish }
         },
         middlePointRect(rect: type.Rect) {
             return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector
