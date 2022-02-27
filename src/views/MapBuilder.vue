@@ -74,18 +74,21 @@
         </div>
         <div>
             <div v-for="option in Options" :key="option.type">
-                <div
-                    v-if="shopShow"
-                    @click.stop="changeHex(shopPosition.position[0], shopPosition.position[1], option.type)"
-                    style="position: absolute; border: 2px solid rgb(0, 0, 0)"
-                    :style="{
-                        left: shopPosition.left + option.left + 'px',
-                        top: shopPosition.top + option.top + 'px',
-                        height: shopSize + 'px',
-                        width: shopSize + 'px',
-                        backgroundColor: option.color,
-                    }"
-                ></div>
+                <div v-if="shopShow">
+                    <div
+                        @click.stop="changeHex(shopPosition.position[0], shopPosition.position[1], option.type)"
+                        :style="{
+                            backgroundColor: option.color,
+                        }"
+                    >
+                        <div id="shop">
+                            <div class="card w-100 text-dark">
+                                <div class="card card-header">{{ option.type }}</div>
+                                <div class="card card-body"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -132,12 +135,10 @@ export default defineComponent({
                 position: [0, 0] as type.Vector,
             },
             Options: [
-                { type: 'path', color: '#555555', top: 7, left: -25 },
-                // { type: "", color: "#008000", top: -2, left: 0 },
-                { type: 'water', color: '#0000FF', top: 7, left: 25 },
-                { type: 'hill', color: '#754c00', top: 46, left: -25 },
-                // { type: "", color: "#008000", top: 56, left: 0 },
-                { type: 'grass', color: '#008000', top: 46, left: 25 },
+                { type: 'path', color: '#555555' },
+                { type: 'water', color: '#0000FF' },
+                { type: 'hill', color: '#754c00' },
+                { type: 'grass', color: '#008000' },
             ] as type.TileOption[],
         }
     },

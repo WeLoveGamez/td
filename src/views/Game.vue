@@ -78,17 +78,13 @@
                     </Teleport>
                 </div>
             </div>
-            <div class="d-flex mx-auto">
+            <div class="d-flex justify-content-center my-3">
                 <div v-for="option in towerOptions" :key="option.type">
                     <div v-if="selectedTileIndices">
                         <div
                             v-if="selectedTile?.type == 'grass'"
                             @click.stop="buildTower(selectedTileIndices!, option)"
                             :style="{
-                                // left: getPosition(...selectedTileIndices!)[0] + option.left -12 + 'px',
-                                // top: getPosition(...selectedTileIndices!)[1] + option.top -37+  'px',
-                                // height: shopSize + 'px',
-                                // width: shopSize + 'px',
                                 backgroundColor: option.color,
                             }"
                         >
@@ -149,7 +145,6 @@ export default defineComponent({
             path: [] as type.FieldDiv[],
 
             enemies: [] as type.Enemy[],
-            // towers: [] as type.Tower[],
 
             gameStarted: false,
             gamelooptick: 0,
@@ -166,12 +161,9 @@ export default defineComponent({
             },
 
             towerOptions: [
-                { color: '#FF0000', type: 'sniper', top: 7, left: -23 },
-                { color: '#00FF00', type: 'ballista', top: 7, left: 27 },
-                { color: '#0000FF', type: 'laser', top: -2, left: 2 },
-                // { type: 'hill', color: '#754c00', top: 46, left: -23 },
-                // { type: '', color: '#008000', top: 56, left: 2 },
-                // { type: 'grass', color: '#008000', top: 46, left: 27 },
+                { color: '#FF0000', type: 'sniper' },
+                { color: '#00FF00', type: 'ballista' },
+                { color: '#0000FF', type: 'laser' },
             ] as type.TowerOption[],
         }
     },
@@ -543,19 +535,4 @@ export default defineComponent({
         position: absolute;
     }
 }
-// .attackrange.active::after {
-//     content: '';
-//     width: calc(2 * var(--range));
-//     height: calc(2 * var(--range));
-//     min-width: calc(2 * var(--range));
-//     min-height: calc(2 * var(--range));
-//     position: absolute;
-//     border-radius: 50%;
-//     border: 3px solid var(--color);
-//     transform: translate(-50%, -50%);
-//     top: 50%;
-//     left: 50%;
-//     z-index: 2;
-// }
-//
 </style>

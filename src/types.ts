@@ -52,8 +52,6 @@ export interface Rect {
     width: number
 }
 export interface ShopOption {
-    top: number
-    left: number
     color: string
 }
 export interface TileOption extends ShopOption {
