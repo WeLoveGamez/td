@@ -9,7 +9,7 @@
             </div>
 
             <div class="d-flex justify-content-center mt-3">
-                <div v-for="(row, xIndex) in field" :key="JSON.stringify(row)" :style="{ marginTop: xIndex % 2 == 0 ? `${18}px` : 0 + 'px' }">
+                <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                     <div v-for="(hex, yIndex) in row" :key="hex.id" @click.stop="openBuildMenu(xIndex, yIndex, $event)">
                         <div
                             v-if="getTower(xIndex, yIndex)"
@@ -464,31 +464,35 @@ export default defineComponent({
 </script>
 <style lang="scss" scoped>
 $hex-width: 20px;
-$hex-height: calc(1.732 * $hex-width);
+$hex-height: floor(calc(1.732 * $hex-width));
+
+.offsetRow:nth-child(2n + 1) {
+    margin-top: round(calc($hex-width - round(calc($hex-width * 0.1))));
+}
 
 .hex {
     position: relative;
     width: $hex-width;
     height: $hex-height;
-    background-color: #64c7cc;
-    margin: 6px 8px;
+    background-color: #64cc7e;
+    margin: 2px round(calc(($hex-width/2) / 2) + 1);
 }
 .hex:before,
 .hex:after {
     content: '';
     position: absolute;
     width: 0;
-    border-top: calc($hex-height/2) solid transparent;
-    border-bottom: calc($hex-height/2) solid transparent;
+    border-top: floor(calc($hex-height/2)) solid transparent;
+    border-bottom: floor(calc($hex-height/2)) solid transparent;
 }
 .hex:before {
     left: 100%;
-    border-left: calc($hex-width/2) solid #64c7cc;
+    border-left: floor(calc($hex-width/2)) solid #64cc7e;
 }
 .hex:after {
     right: 100%;
     width: 0;
-    border-right: calc($hex-width/2) solid #64c7cc;
+    border-right: floor(calc($hex-width/2)) solid #64cc7e;
 }
 
 .attackrange.active::after {
