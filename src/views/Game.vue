@@ -14,14 +14,12 @@
                         <div
                             v-if="getTower(xIndex, yIndex)"
                             :style="{
-                                color: getTower(xIndex, yIndex)?.color,
                                 '--range': getTower(xIndex, yIndex)?.range + 'px',
                                 '--color': getTower(xIndex, yIndex)?.color,
                             }"
                             class="hex attackrange"
                             :class="{ active: shopShow }"
                             :id="xIndex + '|' + yIndex + ''"
-
                         >
                             <Teleport to="#polylineContainer">
                                 <polyline
@@ -35,15 +33,13 @@
                         <div
                             v-else
                             :style="{
-                                color: hex.color,
+                                '--color': hex.color,
                             }"
                             class="hex"
                             :id="xIndex + '|' + yIndex + ''"
                         ></div>
 
-                        ></div>
                         <!-- <div v-else :style="{ backgroundImage: hex.color }" class="hex" :id="xIndex + '|' + yIndex + ''"></div> -->
-
                     </div>
                 </div>
                 <div
@@ -169,7 +165,7 @@ export default defineComponent({
                 let fieldRow = []
                 for (let hex = 0; hex < this.fieldHeight; hex++) {
                     fieldRow.push({
-                        color: require('../assets/grass.svg'),
+                        color: 'green', //require('../assets/grass.svg'),
                         type: 'gras',
                         id: `${row}|${hex}`,
                     })
@@ -506,7 +502,7 @@ $hex-height: floor(calc(1.732 * $hex-width));
     position: relative;
     width: $hex-width;
     height: $hex-height;
-    background-color: #64cc7e;
+    background-color: var(--color);
     margin: 2px round(calc(($hex-width/2) / 2) + 1);
 }
 .hex:before,
@@ -519,12 +515,12 @@ $hex-height: floor(calc(1.732 * $hex-width));
 }
 .hex:before {
     left: 100%;
-    border-left: floor(calc($hex-width/2)) solid #64cc7e;
+    border-left: floor(calc($hex-width/2)) solid var(--color);
 }
 .hex:after {
     right: 100%;
     width: 0;
-    border-right: floor(calc($hex-width/2)) solid #64cc7e;
+    border-right: floor(calc($hex-width/2)) solid var(--color);
 }
 
 .attackrange.active::after {
