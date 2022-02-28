@@ -47,31 +47,6 @@
                         ></div>
                     </div>
                 </div>
-                <!-- <div>
-                    <Teleport to="#polylineContainer">
-                        <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size" fill="blue" />
-                       
-                        <polyline
-                            v-for="enemy of enemies"
-                            :key="JSON.stringify(enemy)"
-                            :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size},${enemy.cords[1] - enemy.size}`"
-                            fill="none"
-                            stroke="black"
-                            stroke-width="3px"
-                        />
-                        <polyline
-                            v-for="enemy of enemies"
-                            :key="JSON.stringify(enemy)"
-                            :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${
-                                enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP
-                            },${enemy.cords[1] - enemy.size}`"
-                            fill="none"
-                            stroke="red"
-                            stroke-width="3px"
-                        />
-                   
-                    </Teleport>
-                </div> -->
             </div>
             <div class="d-flex justify-content-center my-3">
                 <div v-for="option in towerOptions" :key="option.type">
