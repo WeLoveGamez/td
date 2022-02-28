@@ -22,14 +22,7 @@
                             :class="{ active: shopShow }"
                             :id="xIndex + '|' + yIndex + ''"
                         ></div>
-                        <div
-                            v-else
-                            :style="{
-                                color: hex.color,
-                            }"
-                            class="hex"
-                            :id="xIndex + '|' + yIndex + ''"
-                        ></div>
+                        <div v-else :style="{ backgroundImage: hex.color }" class="hex" :id="xIndex + '|' + yIndex + ''"></div>
                     </div>
                 </div>
                 <div
@@ -144,7 +137,7 @@ export default defineComponent({
                 let fieldRow = []
                 for (let hex = 0; hex < this.fieldHeight; hex++) {
                     fieldRow.push({
-                        color: '#008000',
+                        color: require('../assets/grass.svg'),
                         type: 'gras',
                         id: `${row}|${hex}`,
                     })
@@ -470,23 +463,34 @@ export default defineComponent({
 })
 </script>
 <style lang="scss" scoped>
+$hex-width: 20px;
+$hex-height: calc(1.732 * $hex-width);
+
 .hex {
     position: relative;
-    width: 33px;
-    height: 37px;
-    font-size: 50px;
-    &::before {
-        content: '\2B22';
-        display: flex;
-        -webkit-transform: rotate(-30deg);
-        -moz-transform: rotate(-30deg);
-        -o-transform: rotate(-30deg);
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-30deg);
-        position: absolute;
-    }
+    width: $hex-width;
+    height: $hex-height;
+    background-color: #64c7cc;
+    margin: 6px 8px;
 }
+.hex:before,
+.hex:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    border-top: calc($hex-height/2) solid transparent;
+    border-bottom: calc($hex-height/2) solid transparent;
+}
+.hex:before {
+    left: 100%;
+    border-left: calc($hex-width/2) solid #64c7cc;
+}
+.hex:after {
+    right: 100%;
+    width: 0;
+    border-right: calc($hex-width/2) solid #64c7cc;
+}
+
 .attackrange.active::after {
     content: '';
     width: calc(2 * var(--range));
