@@ -47,26 +47,21 @@
                         ></div>
                     </div>
                 </div>
-                <div
-                    v-for="enemy of enemies"
-                    :key="JSON.stringify(enemy)"
-                    style="position: absolute; background-color: blue; border-radius: 50%"
-                    :style="{
-                        left: enemy.cords[0] - enemy.size / 2 + 'px',
-                        top: enemy.cords[1] - enemy.size / 2 + 'px',
-                        height: enemy.size + 'px',
-                        width: enemy.size + 'px',
-                    }"
-                >
+                <!-- <div>
                     <Teleport to="#polylineContainer">
-                        <!-- enemy hp bar -->
+                        <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size" fill="blue" />
+                       
                         <polyline
+                            v-for="enemy of enemies"
+                            :key="JSON.stringify(enemy)"
                             :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size},${enemy.cords[1] - enemy.size}`"
                             fill="none"
                             stroke="black"
                             stroke-width="3px"
                         />
                         <polyline
+                            v-for="enemy of enemies"
+                            :key="JSON.stringify(enemy)"
                             :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${
                                 enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP
                             },${enemy.cords[1] - enemy.size}`"
@@ -74,9 +69,9 @@
                             stroke="red"
                             stroke-width="3px"
                         />
-                        <!--  -->
+                   
                     </Teleport>
-                </div>
+                </div> -->
             </div>
             <div class="d-flex justify-content-center my-3">
                 <div v-for="option in towerOptions" :key="option.type">
@@ -113,7 +108,29 @@
             </div>
         </div>
 
-        <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%"></svg>
+        <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
+            <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" fill="blue" />
+            <!-- enemy hp bar -->
+            <polyline
+                v-for="enemy of enemies"
+                :key="JSON.stringify(enemy)"
+                :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size},${enemy.cords[1] - enemy.size}`"
+                fill="none"
+                stroke="black"
+                stroke-width="3px"
+            />
+            <polyline
+                v-for="enemy of enemies"
+                :key="JSON.stringify(enemy)"
+                :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP},${
+                    enemy.cords[1] - enemy.size
+                }`"
+                fill="none"
+                stroke="red"
+                stroke-width="3px"
+            />
+            <!--  -->
+        </svg>
     </div>
 </template>
 
@@ -313,7 +330,7 @@ export default defineComponent({
         },
         testSetup() {
             this.clearPath()
-            this.wave = 10
+            this.wave = 100
             for (let i = 0; i < this.fieldWidth; i++) {
                 this.field[i][7] = this.pathfield([i, 7], false, false)
                 this.path.push(this.pathfield([i, 7], false, false))
@@ -349,7 +366,7 @@ export default defineComponent({
                     clearInterval(interval)
                     this.nextWaveSpawning = false
                 }
-            }, 500)
+            }, 5)
         },
         createEnemy() {
             let enemy = {
@@ -434,9 +451,13 @@ export default defineComponent({
             for (let t of this.towers) {
                 let rect = document.getElementById(`${t.indices[0]}|${t.indices[1]}`)!.getBoundingClientRect()
                 let target = this.enemies[0] as type.Enemy | null
+                if (!target) return
+                let towerposition = this.middlePointRect(rect)
                 for (let enemy of this.enemies) {
-                    if (target && lengthSquared(subtract(this.middlePointRect(rect), subtract(enemy.cords, enemy.size / 2))) < t.range ** 2) {
+                    let enemyPosition = subtract(enemy.cords, enemy.size / 2)
+                    if (lengthSquared(subtract(towerposition, enemyPosition)) < t.range ** 2) {
                         switch (t.filter as type.Tower['filter']) {
+                            default:
                             case 'first': {
                                 if (enemy.distanceTravelled > target.distanceTravelled) {
                                     target = enemy
@@ -451,13 +472,33 @@ export default defineComponent({
                             }
                             case 'closest': {
                                 if (
-                                    lengthSquared(subtract(this.middlePointRect(rect), subtract(enemy.cords, enemy.size / 2))) <
-                                    lengthSquared(subtract(this.middlePointRect(rect), subtract(target.cords, target.size / 2)))
+                                    lengthSquared(subtract(towerposition, enemyPosition)) <
+                                    lengthSquared(subtract(towerposition, subtract(target.cords, target.size / 2)))
                                 ) {
                                     target = enemy
                                 }
                                 break
                             }
+                            case 'mostHealthy':
+                                if (enemy.HP > target.HP) {
+                                    target = enemy
+                                }
+                                break
+                            case 'mostWounded':
+                                if (enemy.HP < target.HP) {
+                                    target = enemy
+                                }
+                                break
+                            case 'slowest':
+                                if (enemy.speed < target.speed) {
+                                    target = enemy
+                                }
+                                break
+                            case 'fastest':
+                                if (enemy.speed > target.speed) {
+                                    target = enemy
+                                }
+                                break
                         }
                         this.field[t.indices[0]][t.indices[1]].tower!.target = target?.id ?? null
                     }
