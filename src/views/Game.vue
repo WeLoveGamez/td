@@ -9,7 +9,7 @@
             </div>
 
             <div class="d-flex justify-content-center mt-3">
-                <div v-for="(row, xIndex) in field" :key="JSON.stringify(row)" :style="{ marginTop: xIndex % 2 == 0 ? `${18}px` : 0 + 'px' }">
+                <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                     <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
                         <div
                             v-if="field[xIndex][yIndex].tower"
@@ -40,11 +40,13 @@
                         <div
                             v-else
                             :style="{
-                                color: hex.color,
+                                '--color': hex.color,
                             }"
                             class="hex"
                             :id="xIndex + '|' + yIndex + ''"
                         ></div>
+
+                        <!-- <div v-else :style="{ backgroundImage: hex.color }" class="hex" :id="xIndex + '|' + yIndex + ''"></div> -->
                     </div>
                 </div>
             </div>
@@ -84,8 +86,9 @@
         </div>
 
         <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
+            <!-- enemy  -->
             <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" fill="blue" />
-            <!-- enemy hp bar -->
+
             <polyline
                 v-for="enemy of enemies"
                 :key="JSON.stringify(enemy)"
@@ -530,25 +533,49 @@ export default defineComponent({
 })
 </script>
 <style lang="scss" scoped>
+$hex-width: 20px;
+$hex-height: floor(calc(1.732 * $hex-width));
+
+.offsetRow:nth-child(2n + 1) {
+    margin-top: round(calc($hex-width - round(calc($hex-width * 0.1))));
+}
+
 .hex {
     color: var(--color);
-    overflow: hidden;
     position: relative;
-    width: 39px;
-    margin-left: -3px;
-    margin-right: -3px;
-    height: 37px;
-    font-size: 50px;
-    &::before {
-        content: '\2B22';
-        display: flex;
-        -webkit-transform: rotate(-30deg);
-        -moz-transform: rotate(-30deg);
-        -o-transform: rotate(-30deg);
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-30deg);
-        position: absolute;
-    }
+    width: $hex-width;
+    height: $hex-height;
+    background-color: var(--color);
+    margin: 2px round(calc(($hex-width/2) / 2) + 1);
+}
+.hex:before,
+.hex:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    border-top: floor(calc($hex-height/2)) solid transparent;
+    border-bottom: floor(calc($hex-height/2)) solid transparent;
+}
+.hex:before {
+    left: 100%;
+    border-left: floor(calc($hex-width/2)) solid var(--color);
+}
+.hex:after {
+    right: 100%;
+    width: 0;
+    border-right: floor(calc($hex-width/2)) solid var(--color);
+}
+
+.attackrange.active::after {
+    content: '';
+    width: calc(2 * var(--range));
+    height: calc(2 * var(--range));
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid var(--color);
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    z-index: 2;
 }
 </style>
