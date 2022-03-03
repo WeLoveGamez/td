@@ -1,14 +1,14 @@
 <template>
     <div style="height: 100vh; position: relative" @click="selectedTileIndices = null">
-        <Navbar></Navbar>
+        <!-- <Navbar></Navbar> -->
         <div class="flex-1">
-            <div class="d-flex justify-content-around">
+            <div class="d-flex justify-content-around p-4">
                 <div>gold: {{ Math.round(player.gold) }}</div>
                 <div>HP: {{ player.hp }}</div>
                 <div>wave: {{ wave }}</div>
             </div>
 
-            <div class="d-flex justify-content-center mt-3">
+            <div class="d-flex justify-content-center">
                 <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                     <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
                         <div
@@ -17,7 +17,7 @@
                                 '--range': hex.tower?.range + 'px',
                                 '--color': hex.tower?.color,
                             }"
-                            class="hex attackrange"
+                            class="hex"
                             :id="xIndex + '|' + yIndex + ''"
                         >
                             <Teleport to="#polylineContainer">
@@ -50,26 +50,38 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-center my-3">
-                <div v-for="option in towerOptions" :key="option.type">
-                    <div v-if="selectedTileIndices">
-                        <div
-                            v-if="selectedTile?.type == 'grass'"
-                            @click.stop="buildTower(selectedTileIndices!, option)"
-                            :style="{
-                                backgroundColor: option.color,
-                            }"
-                        >
+            <div v-if="selectedTileIndices && !selectedTower">
+                <div class="d-flex justify-content-center my-3">
+                    <div v-for="option in TOWER_OPTIONS" :key="option.type">
+                        <div v-if="tower([0, 0], option).buildingFields.some(f => f == selectedTile?.type)" @click.stop="buildTower(selectedTileIndices!, option)">
                             <div id="shop">
                                 <div class="card w-100 text-dark">
-                                    <div class="card card-header">{{ option.type }}</div>
-                                    <div class="card card-body">
+                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                    <div class="card card-body py-1 px-3">
                                         <div>price:{{ tower([0, 0], option).price }}</div>
                                         <div>range:{{ tower([0, 0], option).range }}</div>
                                         <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
                                         <div>atk:{{ tower([0, 0], option).atk }}</div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-if="selectedTower" class="d-flex justify-content-center my-3">
+                <div id="towermenu">
+                    <div class="card w-100 text-dark">
+                        <div class="card card-header p-0">{{ selectedTower.type }}</div>
+                        <div class="card card-body d-flex">
+                            <div>
+                                <button class="btn btn-danger" type="button" @click.stop="sell(selectedTower!)">
+                                    sell Tower ${{ Math.floor(selectedTower.totalValue / 2) }}
+                                </button>
+                                <button class="btn btn-danger" type="button" @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)">
+                                    upgrade Tower ${{ Math.floor(selectedTower!.totalValue*0.2) }}
+                                </button>
+                                {{ selectedTower }}
                             </div>
                         </div>
                     </div>
@@ -115,13 +127,61 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as type from '@/types'
-import { add, subtract, multiply, length, percent, lengthSquared, divide } from '@/calc'
-import Navbar from '@/components/Navbar.vue'
+import { add, subtract, length, lengthSquared, divide } from '@/calc'
+// import Navbar from '@/components/Navbar.vue'
 
+const TOWER_OPTIONS = {
+    sniper: {
+        atk: 30,
+        range: 500,
+        atkspeed: 1,
+        price: 20,
+        totalValue: 20,
+        buildingFields: ['forest', 'hill', 'grass'],
+        color: '#FF0000',
+        type: 'sniper',
+    } as type.Tower,
+    ballista: {
+        atk: 15,
+        range: 150,
+        atkspeed: 3,
+        price: 25,
+        totalValue: 25,
+        buildingFields: ['forest', 'hill', 'grass'],
+        color: '#00FF00',
+        type: 'ballista',
+    } as type.Tower,
+    laser: {
+        atk: 3,
+        range: 150,
+        atkspeed: 10,
+        price: 30,
+        totalValue: 30,
+        buildingFields: ['forest', 'hill', 'grass'],
+        color: '#0000FF',
+        type: 'laser',
+    } as type.Tower,
+    canonship: {
+        atk: 15,
+        range: 250,
+        atkspeed: 2,
+        price: 40,
+        totalValue: 40,
+        buildingFields: ['water'],
+        color: '#754c33',
+        type: 'canonship',
+    } as type.Tower,
+}
+const TERRAIN = {
+    hill: { atk: 1, atkspeed: 1, range: 1.2 },
+    water: { atk: 1, atkspeed: 1, range: 1 },
+    forest: { atk: 1, atkspeed: 0.8, range: 0.9 },
+    grass: { atk: 1, atkspeed: 1, range: 1 },
+} as Record<type.TileOption['type'], Pick<type.Tower, 'atk' | 'atkspeed' | 'range'>>
 export default defineComponent({
-    components: { Navbar },
+    // components: { Navbar },
     setup() {
-        return { percent, add }
+        return { TOWER_OPTIONS }
     },
     data() {
         return {
@@ -154,12 +214,6 @@ export default defineComponent({
                 top: 0,
                 position: [0, 0] as type.Vector,
             },
-
-            towerOptions: [
-                { color: '#FF0000', type: 'sniper' },
-                { color: '#00FF00', type: 'ballista' },
-                { color: '#0000FF', type: 'laser' },
-            ] as type.TowerOption[],
         }
     },
     mounted() {
@@ -176,6 +230,9 @@ export default defineComponent({
                 .flat()
                 .filter(f => f.tower)
                 .map(e => e.tower!)
+        },
+        selectedTower(): type.Tower | null {
+            return this.selectedTile?.tower ?? null
         },
     },
     methods: {
@@ -195,11 +252,35 @@ export default defineComponent({
             for (let row = 0; row < this.fieldWidth; row++) {
                 let fieldRow = [] as type.FieldDiv[]
                 for (let hex = 0; hex < this.fieldHeight; hex++) {
-                    fieldRow.push({
-                        color: '#008000',
-                        type: 'grass',
-                        indices: [row, hex],
-                    })
+                    let i = this.getRandomInt(50)
+                    if (i == 0) {
+                        fieldRow.push({
+                            color: '#005000',
+                            type: 'forest',
+                            indices: [row, hex],
+                        })
+                    }
+                    if (i == 1 || i == 2) {
+                        fieldRow.push({
+                            color: '#0000FF',
+                            type: 'water',
+                            indices: [row, hex],
+                        })
+                    }
+                    if (i == 3 || i == 4) {
+                        fieldRow.push({
+                            color: '#754c00',
+                            type: 'hill',
+                            indices: [row, hex],
+                        })
+                    }
+                    if (i > 4) {
+                        fieldRow.push({
+                            color: '#008000',
+                            type: 'grass',
+                            indices: [row, hex],
+                        })
+                    }
                 }
                 this.field.push(fieldRow)
             }
@@ -308,17 +389,20 @@ export default defineComponent({
         },
         testSetup() {
             this.clearPath()
-            this.wave = 100
+            this.wave = 500000
+            for (let i = 0; i < this.wave; i++) {
+                this.player.gold += 10 * i ** 0.5 * i
+            }
             for (let i = 0; i < this.fieldWidth; i++) {
                 this.field[i][7] = this.pathfield([i, 7], false, false)
                 this.path.push(this.pathfield([i, 7], false, false))
             }
-            for (let i = 0; i < this.fieldWidth; i++) {
-                this.buildTower([i, 8], this.towerOptions[2])
-            }
-            for (let i = 0; i < this.fieldWidth; i++) {
-                this.buildTower([i, 6], this.towerOptions[2])
-            }
+            // for (let i = 0; i < this.fieldWidth; i++) {
+            //     this.buildTower([i, 8], TOWER_OPTIONS['laser'])
+            // }
+            // for (let i = 0; i < this.fieldWidth; i++) {
+            //     this.buildTower([i, 6], TOWER_OPTIONS['laser'])
+            // }
         },
         //controls
         movement() {
@@ -344,7 +428,7 @@ export default defineComponent({
                     clearInterval(interval)
                     this.nextWaveSpawning = false
                 }
-            }, 5)
+            }, 500)
         },
         createEnemy() {
             let enemy = {
@@ -386,43 +470,36 @@ export default defineComponent({
             this.player.hp--
             this.enemies = this.enemies.filter(e => e !== enemy)
         },
-        //tower
+        //towers
         buildTower(position: type.Vector, tower: type.TowerOption) {
             this.selectedTileIndices = null
             if (!tower) return
+            let buffs = TERRAIN[this.field[position[0]][position[1]].type]
             let newTower = this.tower([position[0], position[1]], tower)
+            newTower.atk *= buffs.atk
+            newTower.atkspeed *= buffs.atkspeed
+            newTower.range *= buffs.range
             this.field[position[0]][position[1]].tower = newTower
             this.player.gold -= newTower.price
         },
+        sell(tower: type.Tower) {
+            this.player.gold += Math.floor(tower.totalValue / 2)
+            this.field[tower.indices[0]][tower.indices[1]].tower = undefined
+        },
+        upgrade(tower: type.Tower, upgradeCost: number, statIncrease: number) {
+            if (this.player.gold - upgradeCost < 0) return
+            for (let prop of ['atk', 'atkspeed', 'range'] as const) tower[prop] *= statIncrease
+            tower.level++
+            tower.totalValue += upgradeCost
+            this.player.gold -= upgradeCost
+        },
         tower(indices: type.Vector, tower: type.TowerOption): type.Tower {
             return {
-                ...{
-                    sniper: {
-                        atk: 30,
-                        range: 500,
-                        atkspeed: 1,
-                        price: 20,
-                    },
-                    ballista: {
-                        atk: 15,
-                        range: 150,
-                        atkspeed: 3,
-                        price: 25,
-                    },
-                    laser: {
-                        atk: 5,
-                        range: 150,
-                        atkspeed: 10,
-                        price: 30,
-                    },
-                }[tower.type],
-
-                atkrdy: true,
-                color: tower.color,
-                type: tower.type,
+                ...TOWER_OPTIONS[tower.type],
                 indices: indices,
                 target: null,
-                filter: 'closest',
+                filter: 'first',
+                level: 1,
             }
         },
         getTowerTargets() {
@@ -484,7 +561,7 @@ export default defineComponent({
             }
         },
         towerAttack() {
-            for (let tower of this.towers.filter(t => this.gamelooptick % (60 / t.atkspeed) == 0)) {
+            for (let tower of this.towers.filter(t => this.gamelooptick % (60 / t.atkspeed) < 1)) {
                 let Index = this.enemies.findIndex(e => e.id == tower.target)
                 if (Index != -1) this.enemies[Index].HP -= tower.atk
                 if (this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
@@ -564,18 +641,5 @@ $hex-height: floor(calc(1.732 * $hex-width));
     right: 100%;
     width: 0;
     border-right: floor(calc($hex-width/2)) solid var(--color);
-}
-
-.attackrange.active::after {
-    content: '';
-    width: calc(2 * var(--range));
-    height: calc(2 * var(--range));
-    position: absolute;
-    border-radius: 50%;
-    border: 3px solid var(--color);
-    transform: translate(-50%, -50%);
-    top: 50%;
-    left: 50%;
-    z-index: 2;
 }
 </style>
