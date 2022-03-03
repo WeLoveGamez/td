@@ -1,6 +1,6 @@
 <template>
     <div style="height: 100vh; position: relative" @click="selectedTileIndices = null">
-        <Navbar></Navbar>
+        <!-- <Navbar></Navbar> -->
         <div class="flex-1">
             <div class="d-flex justify-content-around">
                 <div>gold: {{ Math.round(player.gold) }}</div>
@@ -19,6 +19,7 @@
                             }"
                             class="hex attackrange"
                             :id="xIndex + '|' + yIndex + ''"
+                            tabindex="0"
                         >
                             <Teleport to="#polylineContainer">
                                 <polyline
@@ -32,7 +33,7 @@
                                     :cx="getPosition(xIndex, yIndex)[0]"
                                     :cy="getPosition(xIndex, yIndex)[1]"
                                     :r="hex.tower?.range"
-                                    fill="none"
+                                    fill="rgba(255, 0, 30, 0.13)"
                                     :stroke="hex.tower?.color"
                                 />
                             </Teleport>
@@ -44,44 +45,40 @@
                             }"
                             class="hex"
                             :id="xIndex + '|' + yIndex + ''"
+                            tabindex="0"
                         ></div>
-
-                        <!-- <div v-else :style="{ backgroundImage: hex.color }" class="hex" :id="xIndex + '|' + yIndex + ''"></div> -->
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-center my-3">
+            <div id="shop" class="d-flex justify-content-center my-3">
                 <div v-for="option in towerOptions" :key="option.type">
-                    <div v-if="selectedTileIndices">
-                        <div
-                            v-if="selectedTile?.type == 'grass'"
-                            @click.stop="buildTower(selectedTileIndices!, option)"
-                            :style="{
-                                backgroundColor: option.color,
-                            }"
-                        >
-                            <div id="shop">
-                                <div class="card w-100 text-dark">
-                                    <div class="card card-header">{{ option.type }}</div>
-                                    <div class="card card-body">
-                                        <div>price:{{ tower([0, 0], option).price }}</div>
-                                        <div>range:{{ tower([0, 0], option).range }}</div>
-                                        <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
-                                        <div>atk:{{ tower([0, 0], option).atk }}</div>
-                                    </div>
-                                </div>
+                    <div
+                        v-if="selectedTile?.type == 'grass'"
+                        @click.stop="buildTower(selectedTileIndices!, option)"
+                        :style="{
+                            backgroundColor: option.color,
+                        }"
+                    >
+                        <div class="card w-100 text-dark">
+                            <div class="card card-header">{{ option.type }}</div>
+                            <div class="card card-body">
+                                <div class="hex mx-auto" :style="{ '--color': option.color }"></div>
+                                <div>price:{{ tower([0, 0], option).price }}</div>
+                                <div>range:{{ tower([0, 0], option).range }}</div>
+                                <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
+                                <div>atk:{{ tower([0, 0], option).atk }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="reset()">reset</button>
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button>
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
-                <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
+                <div class="hex button" :disabled="gameStarted" @click="reset()">reset</div>
+                <div class="hex button" :disabled="gameStarted" @click="testSetup()">setup</div>
+                <div class="hex button" :disabled="gameStarted" @click="gameLoop()">step</div>
+                <div class="hex button" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
-                </button>
+                </div>
             </div>
         </div>
 
@@ -116,10 +113,10 @@
 import { defineComponent } from 'vue'
 import * as type from '@/types'
 import { add, subtract, multiply, length, percent, lengthSquared, divide } from '@/calc'
-import Navbar from '@/components/Navbar.vue'
+// import Navbar from '@/components/Navbar.vue'
 
 export default defineComponent({
-    components: { Navbar },
+    // components: { Navbar },
     setup() {
         return { percent, add }
     },
@@ -131,8 +128,8 @@ export default defineComponent({
             } as type.Player,
 
             hexagonSize: 50,
-            fieldWidth: 30,
-            fieldHeight: 15,
+            fieldWidth: 50,
+            fieldHeight: 20,
             field: [] as unknown as type.Field,
 
             counter: 0,
@@ -156,9 +153,9 @@ export default defineComponent({
             },
 
             towerOptions: [
-                { color: '#FF0000', type: 'sniper' },
-                { color: '#00FF00', type: 'ballista' },
-                { color: '#0000FF', type: 'laser' },
+                { color: '0, 50%, 60%', type: 'sniper' },
+                { color: '244, 50%, 60%', type: 'ballista' },
+                { color: '303, 50%, 60%', type: 'laser' },
             ] as type.TowerOption[],
         }
     },
@@ -196,7 +193,7 @@ export default defineComponent({
                 let fieldRow = [] as type.FieldDiv[]
                 for (let hex = 0; hex < this.fieldHeight; hex++) {
                     fieldRow.push({
-                        color: '#008000',
+                        color: '135, 50%, 60%',
                         type: 'grass',
                         indices: [row, hex],
                     })
@@ -516,7 +513,7 @@ export default defineComponent({
             return false
         },
         pathfield(indices: type.Vector, start: boolean, finish: boolean): type.FieldDiv {
-            return { color: '#555555', type: 'path', indices: indices, start: start, finish: finish }
+            return { color: '39, 50%, 60%', type: 'path', indices: indices, start: start, finish: finish }
         },
 
         middlePointRect(rect: type.Rect) {
@@ -532,50 +529,4 @@ export default defineComponent({
     },
 })
 </script>
-<style lang="scss" scoped>
-$hex-width: 20px;
-$hex-height: floor(calc(1.732 * $hex-width));
-
-.offsetRow:nth-child(2n + 1) {
-    margin-top: round(calc($hex-width - round(calc($hex-width * 0.1))));
-}
-
-.hex {
-    color: var(--color);
-    position: relative;
-    width: $hex-width;
-    height: $hex-height;
-    background-color: var(--color);
-    margin: 2px round(calc(($hex-width/2) / 2) + 1);
-}
-.hex:before,
-.hex:after {
-    content: '';
-    position: absolute;
-    width: 0;
-    border-top: floor(calc($hex-height/2)) solid transparent;
-    border-bottom: floor(calc($hex-height/2)) solid transparent;
-}
-.hex:before {
-    left: 100%;
-    border-left: floor(calc($hex-width/2)) solid var(--color);
-}
-.hex:after {
-    right: 100%;
-    width: 0;
-    border-right: floor(calc($hex-width/2)) solid var(--color);
-}
-
-.attackrange.active::after {
-    content: '';
-    width: calc(2 * var(--range));
-    height: calc(2 * var(--range));
-    position: absolute;
-    border-radius: 50%;
-    border: 3px solid var(--color);
-    transform: translate(-50%, -50%);
-    top: 50%;
-    left: 50%;
-    z-index: 2;
-}
-</style>
+<style lang="scss" scoped></style>
