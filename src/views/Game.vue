@@ -2,10 +2,13 @@
     <div style="height: 100vh; position: relative" @click="selectedTileIndices = null">
         <!-- <Navbar></Navbar> -->
         <div class="flex-1">
-            <div class="d-flex justify-content-around p-4">
-                <div>gold: {{ Math.round(player.gold) }}</div>
-                <div>HP: {{ player.hp }}</div>
-                <div>wave: {{ wave }}</div>
+            <div class="row col-12 py-2">
+                <div class="col-1 offset-1">gold:</div>
+                <div class="col-3 text-start">{{ Math.round(player.gold) }}</div>
+                <div class="col-1">HP:</div>
+                <div class="col-3 text-start">{{ player.hp }}</div>
+                <div class="col-1">wave:</div>
+                <div class="col-2 text-start">{{ wave }}</div>
             </div>
 
             <div class="d-flex justify-content-center">
@@ -69,9 +72,9 @@
                     </div>
                 </div>
             </div>
-            <div v-if="selectedTower" class="d-flex justify-content-center my-3">
+            <div v-if="selectedTower" class="d-flex justify-content-center">
                 <div id="towermenu">
-                    <div class="card w-100 text-dark">
+                    <div class="card text-dark">
                         <div class="card card-header p-0">{{ selectedTower.type }}</div>
                         <div class="card card-body d-flex">
                             <div>
@@ -79,7 +82,7 @@
                                     sell Tower ${{ Math.floor(selectedTower.totalValue / 2) }}
                                 </button>
                                 <button class="btn btn-danger" type="button" @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)">
-                                    upgrade Tower ${{ Math.floor(selectedTower!.totalValue*0.2) }}
+                                    upgrade Tower ${{ Math.floor(selectedTower!.totalValue*0.3) }}
                                 </button>
                                 {{ selectedTower }}
                             </div>
@@ -89,17 +92,18 @@
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
                 <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="reset()">reset</button>
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button>
+                <!-- <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button> -->
                 <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
                 <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
                 </button>
+                <button class="btn btn-primary shadow-none m-2" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</button>
             </div>
         </div>
 
         <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
             <!-- enemy  -->
-            <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" fill="blue" />
+            <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" :fill="enemy.color" />
 
             <polyline
                 v-for="enemy of enemies"
@@ -187,11 +191,11 @@ export default defineComponent({
         return {
             player: {
                 gold: 100,
-                hp: 10,
+                hp: 100,
             } as type.Player,
 
             hexagonSize: 50,
-            fieldWidth: 30,
+            fieldWidth: 50,
             fieldHeight: 15,
             field: [] as unknown as type.Field,
 
@@ -203,8 +207,9 @@ export default defineComponent({
 
             gameStarted: false,
             gamelooptick: 0,
-            wave: 0,
-            nextWaveSpawning: false,
+            wave: 1,
+            waveSpawn: true,
+            spawned: 0,
 
             selectedTileIndices: null as type.Vector | null,
 
@@ -373,6 +378,25 @@ export default defineComponent({
             }
             return found
         },
+        testSetup() {
+            this.clearPath()
+            this.wave = 100
+            let gold = 0
+            for (let i = 0; i < this.wave; i++) {
+                gold += 10 * i ** 0.5 * i
+            }
+            this.player.gold = gold
+            for (let i = 0; i < this.fieldWidth; i++) {
+                this.field[i][7] = this.pathfield([i, 7], false, false)
+                this.path.push(this.pathfield([i, 7], false, false))
+            }
+            for (let i = 0; i < this.fieldWidth; i++) {
+                this.buildTower([i, 8], TOWER_OPTIONS['laser'])
+            }
+            for (let i = 0; i < this.fieldWidth; i++) {
+                this.buildTower([i, 6], TOWER_OPTIONS['laser'])
+            }
+        },
         //game
         startGame() {
             setInterval(() => {
@@ -382,27 +406,32 @@ export default defineComponent({
             }, 1000 / 60)
         },
         gameLoop() {
+            this.gamelooptick++
             this.checkEntities()
             this.movement()
             this.towerAction()
-            this.gamelooptick++
+            this.spawnWave()
         },
-        testSetup() {
-            this.clearPath()
-            this.wave = 500000
-            for (let i = 0; i < this.wave; i++) {
-                this.player.gold += 10 * i ** 0.5 * i
+        spawnWave() {
+            if (!this.waveSpawn) return
+            let toSpawn = Math.floor(5 * this.wave ** 0.5)
+
+            if (this.gamelooptick % (60 / this.wave ** 0.5) < 1) {
+                switch (this.getRandomInt(2)) {
+                    case 0:
+                        this.createEnemy('blue')
+                        this.spawned++
+                        break
+                    case 1:
+                        this.createEnemy('yellow')
+                        this.spawned += 1.5
+                        break
+                }
             }
-            for (let i = 0; i < this.fieldWidth; i++) {
-                this.field[i][7] = this.pathfield([i, 7], false, false)
-                this.path.push(this.pathfield([i, 7], false, false))
+            if (toSpawn <= this.spawned) {
+                this.waveSpawn = false
+                this.spawned = 0
             }
-            // for (let i = 0; i < this.fieldWidth; i++) {
-            //     this.buildTower([i, 8], TOWER_OPTIONS['laser'])
-            // }
-            // for (let i = 0; i < this.fieldWidth; i++) {
-            //     this.buildTower([i, 6], TOWER_OPTIONS['laser'])
-            // }
         },
         //controls
         movement() {
@@ -412,43 +441,57 @@ export default defineComponent({
             this.checkEnemyLife()
         },
         towerAction() {
-            this.getTowerTargets()
-            this.towerAttack()
+            for (let t of this.towers.filter(t => this.gamelooptick % (60 / t.atkspeed) < 1)) {
+                this.getTowerTarget(t)
+                this.towerAttack(t)
+            }
         },
         //enemy
-        spawnWave() {
-            if (this.nextWaveSpawning == true) return
-            this.nextWaveSpawning = true
-            this.wave++
-            let enemies = 0
-            let interval = setInterval(() => {
-                this.createEnemy()
-                enemies++
-                if (enemies == this.wave) {
-                    clearInterval(interval)
-                    this.nextWaveSpawning = false
-                }
-            }, 500)
-        },
-        createEnemy() {
-            let enemy = {
-                cords: this.getPosition(...this.path[0].indices),
-                id: JSON.stringify(Math.random()),
-                maxHP: 100 * this.wave ** 0.5,
-                HP: 100 * this.wave ** 0.5,
-                size: 16,
-                nextPathNumber: 1,
-                speed: 1.5,
-                distanceTravelled: 0,
-            } as type.Enemy
-            this.enemies.push(enemy)
+        createEnemy(type: string) {
+            switch (type) {
+                case 'blue':
+                    {
+                        let hp = 75 * this.wave ** 0.5
+                        let enemy = {
+                            cords: this.getPosition(...this.path[0].indices),
+                            id: JSON.stringify(Math.random()),
+                            maxHP: hp,
+                            HP: hp,
+                            size: 16,
+                            nextPathNumber: 1,
+                            speed: 1.5,
+                            distanceTravelled: 0,
+                            color: 'blue',
+                        } as type.Enemy
+                        this.enemies.push(enemy)
+                    }
+                    break
+                case 'yellow':
+                    {
+                        let hp = 150 * this.wave ** 0.5
+                        let enemy = {
+                            cords: this.getPosition(...this.path[0].indices),
+                            id: JSON.stringify(Math.random()),
+                            maxHP: hp,
+                            HP: hp,
+                            size: 16,
+                            nextPathNumber: 1,
+                            speed: 0.8,
+                            distanceTravelled: 0,
+                            color: 'yellow',
+                        } as type.Enemy
+                        this.enemies.push(enemy)
+                    }
+                    break
+            }
         },
         checkEnemyLife() {
             this.player.gold += this.enemies.filter(e => e.HP <= 0).reduce((a, c) => a + c.maxHP / 10, 0)
             this.enemies = this.enemies.filter(e => e.HP > 0)
 
             if (this.enemies.length == 0) {
-                this.spawnWave()
+                if (!this.waveSpawn) this.wave++
+                this.waveSpawn = true
             }
         },
         moveEnemy() {
@@ -502,70 +545,65 @@ export default defineComponent({
                 level: 1,
             }
         },
-        getTowerTargets() {
-            for (let t of this.towers) {
-                let rect = document.getElementById(`${t.indices[0]}|${t.indices[1]}`)!.getBoundingClientRect()
-                let target = this.enemies[0] as type.Enemy | null
-                if (!target) return
-                let towerposition = this.middlePointRect(rect)
-                for (let enemy of this.enemies) {
-                    let enemyPosition = subtract(enemy.cords, enemy.size / 2)
-                    if (lengthSquared(subtract(towerposition, enemyPosition)) < t.range ** 2) {
-                        switch (t.filter as type.Tower['filter']) {
-                            default:
-                            case 'first': {
-                                if (enemy.distanceTravelled > target.distanceTravelled) {
-                                    target = enemy
-                                }
-                                break
+        getTowerTarget(t: type.Tower) {
+            let rect = document.getElementById(`${t.indices[0]}|${t.indices[1]}`)!.getBoundingClientRect()
+            let target = null as type.Enemy | null
+            let towerposition = this.middlePointRect(rect)
+            for (let enemy of this.enemies.filter(e => e.HP > 0)) {
+                let enemyPosition = subtract(enemy.cords, enemy.size / 2)
+                if (lengthSquared(subtract(towerposition, enemyPosition)) < t.range ** 2) {
+                    switch (t.filter as type.Tower['filter']) {
+                        default:
+                        case 'first': {
+                            if (target == null || enemy.distanceTravelled > target.distanceTravelled) {
+                                target = enemy
                             }
-                            case 'last': {
-                                if (enemy.distanceTravelled < target.distanceTravelled) {
-                                    target = enemy
-                                }
-                                break
-                            }
-                            case 'closest': {
-                                if (
-                                    lengthSquared(subtract(towerposition, enemyPosition)) <
-                                    lengthSquared(subtract(towerposition, subtract(target.cords, target.size / 2)))
-                                ) {
-                                    target = enemy
-                                }
-                                break
-                            }
-                            case 'mostHealthy':
-                                if (enemy.HP > target.HP) {
-                                    target = enemy
-                                }
-                                break
-                            case 'mostWounded':
-                                if (enemy.HP < target.HP) {
-                                    target = enemy
-                                }
-                                break
-                            case 'slowest':
-                                if (enemy.speed < target.speed) {
-                                    target = enemy
-                                }
-                                break
-                            case 'fastest':
-                                if (enemy.speed > target.speed) {
-                                    target = enemy
-                                }
-                                break
+                            break
                         }
-                        this.field[t.indices[0]][t.indices[1]].tower!.target = target?.id ?? null
+                        case 'last': {
+                            if (target == null || enemy.distanceTravelled < target.distanceTravelled) {
+                                target = enemy
+                            }
+                            break
+                        }
+                        case 'closest': {
+                            if (
+                                target == null ||
+                                lengthSquared(subtract(towerposition, enemyPosition)) < lengthSquared(subtract(towerposition, subtract(target.cords, target.size / 2)))
+                            ) {
+                                target = enemy
+                            }
+                            break
+                        }
+                        case 'mostHealthy':
+                            if (target == null || enemy.HP > target.HP) {
+                                target = enemy
+                            }
+                            break
+                        case 'mostWounded':
+                            if (target == null || enemy.HP < target.HP) {
+                                target = enemy
+                            }
+                            break
+                        case 'slowest':
+                            if (target == null || enemy.speed < target.speed) {
+                                target = enemy
+                            }
+                            break
+                        case 'fastest':
+                            if (target == null || enemy.speed > target.speed) {
+                                target = enemy
+                            }
+                            break
                     }
                 }
             }
+            this.field[t.indices[0]][t.indices[1]].tower!.target = target?.id ?? null
         },
-        towerAttack() {
-            for (let tower of this.towers.filter(t => this.gamelooptick % (60 / t.atkspeed) < 1)) {
-                let Index = this.enemies.findIndex(e => e.id == tower.target)
-                if (Index != -1) this.enemies[Index].HP -= tower.atk
-                if (this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
-            }
+        towerAttack(tower: type.Tower) {
+            let Index = this.enemies.findIndex(e => e.id == tower.target)
+            if (Index != -1) this.enemies[Index].HP -= tower.atk
+            if (Index != -1 && this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
         },
 
         //general
@@ -610,7 +648,7 @@ export default defineComponent({
 })
 </script>
 <style lang="scss" scoped>
-$hex-width: 20px;
+$hex-width: 18px;
 $hex-height: floor(calc(1.732 * $hex-width));
 
 .offsetRow:nth-child(2n + 1) {

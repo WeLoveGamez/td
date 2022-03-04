@@ -24,6 +24,7 @@ export interface Enemy {
     nextPathNumber: number
     speed: number
     distanceTravelled: number
+    color: string
 }
 
 export interface Tower {
