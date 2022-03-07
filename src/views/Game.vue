@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100vh; position: relative" @click="selectedTileIndices = null">
+    <div id="game" style="height: 100vh; position: relative" @click="selectedTileIndices = null">
         <!-- <Navbar></Navbar> -->
         <div class="flex-1">
             <div class="d-flex justify-content-around">
@@ -51,7 +51,7 @@
                 </div>
             </div>
             <div id="shop" class="d-flex justify-content-center my-3">
-                <div v-for="option in towerOptions" :key="option.type">
+                <div v-for="option in towerOptions" :key="option.type" class="mx-4">
                     <div
                         v-if="selectedTile?.type == 'grass'"
                         @click.stop="buildTower(selectedTileIndices!, option)"
@@ -59,7 +59,7 @@
                             backgroundColor: option.color,
                         }"
                     >
-                        <div class="card w-100 text-dark">
+                        <div class="card text-dark">
                             <div class="card card-header">{{ option.type }}</div>
                             <div class="card card-body">
                                 <div class="hex mx-auto" :style="{ '--color': option.color }"></div>
@@ -73,10 +73,10 @@
                 </div>
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
-                <div class="hex button" :disabled="gameStarted" @click="reset()">reset</div>
-                <div class="hex button" :disabled="gameStarted" @click="testSetup()">setup</div>
-                <div class="hex button" :disabled="gameStarted" @click="gameLoop()">step</div>
-                <div class="hex button" @click="gameStarted = !gameStarted">
+                <div class="button" :disabled="gameStarted" @click="reset()">reset</div>
+                <div class="button" :disabled="gameStarted" @click="testSetup()">setup</div>
+                <div class="button" :disabled="gameStarted" @click="gameLoop()">step</div>
+                <div class="button" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
                 </div>
             </div>
@@ -89,10 +89,10 @@
             <polyline
                 v-for="enemy of enemies"
                 :key="JSON.stringify(enemy)"
-                :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size},${enemy.cords[1] - enemy.size}`"
+                :points="`${enemy.cords[0] - enemy.size - 1},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size + 1},${enemy.cords[1] - enemy.size}`"
                 fill="none"
                 stroke="black"
-                stroke-width="3px"
+                stroke-width="5px"
             />
             <polyline
                 v-for="enemy of enemies"
@@ -257,7 +257,7 @@ export default defineComponent({
             this.path = []
             this.field.forEach((row, x) =>
                 row.forEach((hex, y) => {
-                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '#008000' }
+                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '135, 50%, 60%' }
                 })
             )
         },

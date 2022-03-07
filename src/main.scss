@@ -1,4 +1,4 @@
-// colors --use only hsl!
+// color-variables --use only hsl!
 :root {
     --sniper: hsl(0, 50%, 60%);
     --balista: hsl(244, 50%, 60%);
@@ -7,8 +7,15 @@
     --grass: hsl(135, 50%, 60%);
     --water: hsl(202, 50%, 60%);
     --hill: hsl(93, 50%, 60%);
+    --general: hsl(0, 0%, 23%);
+    --button: hsl(212, 80%, 52%);
 }
-// map scss part
+// game-background
+#game {
+    background-image: url('/bgbig.gif');
+    background-position: 0px -500px;
+}
+// hexagon-design
 $hex-width: 20px;
 // warning!
 // do not change anything under this line here!
@@ -22,16 +29,12 @@ $hex-height: floor(calc(1.732 * $hex-width));
     height: $hex-height;
     background-color: hsl(var(--color));
     margin: 2px round(calc(($hex-width/2) / 2) + 1);
-    &.button {
-        margin: 100px;
-        background-color: hsl(212, 80%, 52%);
-    }
     &:focus {
         background-color: hsla(var(--color), 0.6);
     }
 }
-.hex:before,
-.hex:after {
+.hex::before,
+.hex::after {
     content: '';
     position: absolute;
     width: 0;
@@ -44,30 +47,80 @@ $hex-height: floor(calc(1.732 * $hex-width));
 }
 .hex::after {
     right: 100%;
-    width: 0;
     border-right: floor(calc($hex-width/2)) solid hsla(var(--color));
 }
-.hex:focus:before {
+.hex:focus::before {
     left: 100%;
     border-left: floor(calc($hex-width/2)) solid hsla(var(--color), 0.6);
 }
-.hex:focus:after {
+.hex:focus::after {
     right: 100%;
-    width: 0;
     border-right: floor(calc($hex-width/2)) solid hsla(var(--color), 0.6);
+}
+// buttons
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: calc($hex-width * 6);
+    height: $hex-height;
+    margin: 2px round(calc(($hex-width/2) / 2) + 10);
+    background-color: var(--button);
+    &:hover {
+        background-color: hsla(212, 80%, 52%, 0.6);
+    }
+    &:active {
+        background-color: hsl(212, 80%, 52%, 0.4);
+    }
+}
+.button::before,
+.button::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    border-top: floor(calc($hex-height/2)) solid transparent;
+    border-bottom: floor(calc($hex-height/2)) solid transparent;
+}
+.button::before {
+    left: 100%;
+    border-left: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%);
+}
+.button:after {
+    right: 100%;
+    border-right: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%);
+    top: 0px;
+}
+.button:hover::before {
+    left: 100%;
+    border-left: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.6);
+}
+.button:hover::after {
+    right: 100%;
+    border-right: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.6);
+}
+.button:active::before {
+    left: 100%;
+    border-left: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.4);
+}
+.button:active::after {
+    right: 100%;
+    border-right: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.4);
 }
 // tower scss part
 
-// .attackrange:after {
-//     content: '';
-//     width: calc(2 * var(--range));
-//     height: calc(2 * var(--range));
-//     position: absolute;
-//     border-radius: 50%;
-//     background-color: rgba(43, 43, 43, 0.185);
-//     border: 5px solid var(--color);
-//     transform: translate(-50%, -50%);
-//     top: 50%;
-//     left: 50%;
-//     z-index: 2;
-// }
+// shopcard
+.card {
+    -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    background-color: var(--general) !important;
+    color: white !important;
+    .card-header {
+        -webkit-box-shadow: inset 16px 22px 20px -14px rgba(255, 255, 255, 0.42);
+        box-shadow: inset 16px 22px 20px -14px rgba(255, 255, 255, 0.226);
+    }
+    .card-body {
+        -webkit-box-shadow: inset 16px 22px 20px -14px rgba(255, 255, 255, 0.42);
+        box-shadow: inset 16px 0px 20px -14px rgba(255, 255, 255, 0.226);
+    }
+}
