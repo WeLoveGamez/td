@@ -643,13 +643,6 @@ export default defineComponent({
         },
 
         //general
-        checkClickedField(xIndex: number, yIndex: number) {
-            if (this.field[xIndex][yIndex].type != 'path') {
-                return [xIndex, yIndex]
-            } else {
-                return false
-            }
-        },
         getPosition(xIndex: number, yIndex: number) {
             let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
             return this.middlePointRect(rect)
@@ -672,9 +665,6 @@ export default defineComponent({
 
         middlePointRect(rect: type.Rect) {
             return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector
-        },
-        collisionsCheck(vector1: type.Vector, vector2: type.Vector, size1: number, size2: number) {
-            return length(subtract(vector1, vector2)) < size1 / 2 + size2 / 2
         },
         //rnd
         getRandomInt(max: number) {
