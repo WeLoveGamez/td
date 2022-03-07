@@ -38,15 +38,7 @@
                                 />
                             </Teleport>
                         </div>
-                        <div
-                            v-else
-                            :style="{
-                                '--color': hex.color,
-                            }"
-                            class="hex"
-                            :id="xIndex + '|' + yIndex + ''"
-                            tabindex="0"
-                        ></div>
+                        <div v-else class="hex" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0"></div>
                     </div>
                 </div>
             </div>

@@ -4,11 +4,19 @@
     --balista: hsl(244, 50%, 60%);
     --laser: hsl(303, 50%, 60%);
     --path: hsl(39, 50%, 60%);
+    --path-focus: hsl(39, 50%, 50%);
     --grass: hsl(135, 50%, 60%);
+    --grass-focus: hsl(135, 50%, 50%);
     --water: hsl(202, 50%, 60%);
+    --water-focus: hsl(202, 50%, 50%);
     --hill: hsl(93, 50%, 60%);
+    --hill-focus: hsl(93, 50%, 50%);
+    --forest: hsl(125, 36%, 35%);
+    --forest-focus: hsl(125, 36%, 25%);
     --general: hsl(0, 0%, 23%);
     --button: hsl(212, 80%, 52%);
+    --button-darker: hsl(212, 80%, 40%);
+    --button-darkest: hsl(212, 80%, 30%);
 }
 // game-background
 #game {
@@ -27,10 +35,36 @@ $hex-height: floor(calc(1.732 * $hex-width));
     position: relative;
     width: $hex-width;
     height: $hex-height;
-    background-color: hsl(var(--color));
     margin: 2px round(calc(($hex-width/2) / 2) + 1);
-    &:focus {
-        background-color: hsla(var(--color), 0.6);
+    &.path {
+        background-color: var(--path);
+        &:focus {
+            background-color: var(--path-focus);
+        }
+    }
+    &.grass {
+        background-color: var(--grass);
+        &:focus {
+            background-color: var(--grass-focus);
+        }
+    }
+    &.forest {
+        background-color: var(--forest);
+        &:focus {
+            background-color: var(--forest-focus);
+        }
+    }
+    &.hill {
+        background-color: var(--hill);
+        &:focus {
+            background-color: var(--hill-focus);
+        }
+    }
+    &.water {
+        background-color: var(--water);
+        &:focus {
+            background-color: var(--water-focus);
+        }
     }
 }
 .hex::before,
@@ -68,10 +102,10 @@ $hex-height: floor(calc(1.732 * $hex-width));
     margin: 2px round(calc(($hex-width/2) / 2) + 10);
     background-color: var(--button);
     &:hover {
-        background-color: hsla(212, 80%, 52%, 0.6);
+        background-color: var(--button-darker);
     }
     &:active {
-        background-color: hsl(212, 80%, 52%, 0.4);
+        background-color: var(--button-darkest);
     }
 }
 .button::before,
@@ -84,28 +118,28 @@ $hex-height: floor(calc(1.732 * $hex-width));
 }
 .button::before {
     left: 100%;
-    border-left: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%);
+    border-left: floor(calc($hex-width/2)) solid var(--button);
 }
 .button:after {
     right: 100%;
-    border-right: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%);
+    border-right: floor(calc($hex-width/2)) solid var(--button);
     top: 0px;
 }
 .button:hover::before {
     left: 100%;
-    border-left: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.6);
+    border-left: floor(calc($hex-width/2)) solid var(--button-darker);
 }
 .button:hover::after {
     right: 100%;
-    border-right: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.6);
+    border-right: floor(calc($hex-width/2)) solid var(--button-darker);
 }
 .button:active::before {
     left: 100%;
-    border-left: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.4);
+    border-left: floor(calc($hex-width/2)) solid var(--button-darkest);
 }
 .button:active::after {
     right: 100%;
-    border-right: floor(calc($hex-width/2)) solid hsla(212, 80%, 52%, 0.4);
+    border-right: floor(calc($hex-width/2)) solid var(--button-darkest);
 }
 // tower scss part
 
