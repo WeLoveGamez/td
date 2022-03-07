@@ -101,13 +101,13 @@
                 </div>
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="reset()">reset</button>
+                <div class="button" :disabled="gameStarted" @click="reset()">reset</div>
                 <!-- <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button> -->
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
-                <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
+                <div class="button" :disabled="gameStarted" @click="gameLoop()">step</div>
+                <div class="button" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
-                </button>
-                <button class="btn btn-primary shadow-none m-2" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</button>
+                </div>
+                <div class="button" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</div>
             </div>
         </div>
 
