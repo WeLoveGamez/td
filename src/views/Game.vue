@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100vh; position: relative" @click="selectedTileIndices = null">
+    <div id="game" style="height: 100vh; position: relative" @click="selectedTileIndices = null">
         <!-- <Navbar></Navbar> -->
         <div class="flex-1">
             <div class="row col-12 py-2">
@@ -17,15 +17,7 @@
             <div class="d-flex justify-content-center">
                 <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                     <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
-                        <div
-                            v-if="field[xIndex][yIndex].tower"
-                            :style="{
-                                '--range': hex.tower?.range + 'px',
-                                '--color': hex.tower?.color,
-                            }"
-                            class="hex"
-                            :id="xIndex + '|' + yIndex + ''"
-                        >
+                        <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
                             <Teleport to="#polylineContainer">
                                 <polyline
                                     v-if="hex.tower?.target"
@@ -38,32 +30,25 @@
                                     :cx="getPosition(xIndex, yIndex)[0]"
                                     :cy="getPosition(xIndex, yIndex)[1]"
                                     :r="hex.tower?.range"
-                                    fill="none"
+                                    fill="rgba(255, 0, 30, 0.13)"
                                     :stroke="hex.tower?.color"
                                 />
                             </Teleport>
                         </div>
-                        <div
-                            v-else
-                            :style="{
-                                '--color': hex.color,
-                            }"
-                            class="hex"
-                            :id="xIndex + '|' + yIndex + ''"
-                        ></div>
-
-                        <!-- <div v-else :style="{ backgroundImage: hex.color }" class="hex" :id="xIndex + '|' + yIndex + ''"></div> -->
+                        <div v-else class="hex" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0"></div>
                     </div>
                 </div>
             </div>
+
             <div v-if="selectedTileIndices && !selectedTower">
                 <div class="d-flex justify-content-center my-3">
-                    <div v-for="option in TOWER_OPTIONS" :key="option.type">
+                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="mx-4">
                         <div v-if="tower([0, 0], option).buildingFields.some(f => f == selectedTile?.type)" @click.stop="buildTower(selectedTileIndices!, option)">
                             <div id="shop">
-                                <div class="card w-100 text-dark">
+                                <div class="card text-dark">
                                     <div class="card card-header p-0">{{ option.type }}</div>
                                     <div class="card card-body py-1 px-3">
+                                        <div class="hex mx-auto" :class="option.type"></div>
                                         <div>hotKey:{{ option.shortcut }}</div>
                                         <div>price:{{ tower([0, 0], option).price }}</div>
                                         <div>range:{{ tower([0, 0], option).range }}</div>
@@ -116,13 +101,13 @@
                 </div>
             </div>
             <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="reset()">reset</button>
+                <div class="button" :disabled="gameStarted" @click="reset()">reset</div>
                 <!-- <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button> -->
-                <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="gameLoop()">step</button>
-                <button class="btn btn-primary shadow-none m-2" @click="gameStarted = !gameStarted">
+                <div class="button" :disabled="gameStarted" @click="gameLoop()">step</div>
+                <div class="button" @click="gameStarted = !gameStarted">
                     {{ gameStarted ? 'pause' : 'play' }}
-                </button>
-                <button class="btn btn-primary shadow-none m-2" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</button>
+                </div>
+                <div class="button" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</div>
             </div>
         </div>
 
@@ -133,10 +118,10 @@
             <polyline
                 v-for="enemy of enemies"
                 :key="JSON.stringify(enemy)"
-                :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size},${enemy.cords[1] - enemy.size}`"
+                :points="`${enemy.cords[0] - enemy.size - 1},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size + 1},${enemy.cords[1] - enemy.size}`"
                 fill="none"
                 stroke="black"
-                stroke-width="3px"
+                stroke-width="5px"
             />
             <polyline
                 v-for="enemy of enemies"
@@ -156,6 +141,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as type from '@/types'
+
 import { add, subtract, length, lengthSquared, divide } from '@/calc'
 // import Navbar from '@/components/Navbar.vue'
 
@@ -225,7 +211,8 @@ export default defineComponent({
 
             hexagonSize: 50,
             fieldWidth: 50,
-            fieldHeight: 15,
+            fieldHeight: 20,
+
             field: [] as unknown as type.Field,
 
             counter: 0,
@@ -380,7 +367,7 @@ export default defineComponent({
             this.path = []
             this.field.forEach((row, x) =>
                 row.forEach((hex, y) => {
-                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '#008000' }
+                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '135, 50%, 60%' }
                 })
             )
         },
@@ -680,7 +667,7 @@ export default defineComponent({
             return false
         },
         pathfield(indices: type.Vector, start: boolean, finish: boolean): type.FieldDiv {
-            return { color: '#555555', type: 'path', indices: indices, start: start, finish: finish }
+            return { color: '39, 50%, 60%', type: 'path', indices: indices, start: start, finish: finish }
         },
 
         middlePointRect(rect: type.Rect) {
@@ -696,37 +683,4 @@ export default defineComponent({
     },
 })
 </script>
-<style lang="scss" scoped>
-$hex-width: 18px;
-$hex-height: floor(calc(1.732 * $hex-width));
-
-.offsetRow:nth-child(2n + 1) {
-    margin-top: round(calc($hex-width - round(calc($hex-width * 0.1))));
-}
-
-.hex {
-    color: var(--color);
-    position: relative;
-    width: $hex-width;
-    height: $hex-height;
-    background-color: var(--color);
-    margin: 2px round(calc(($hex-width/2) / 2) + 1);
-}
-.hex:before,
-.hex:after {
-    content: '';
-    position: absolute;
-    width: 0;
-    border-top: floor(calc($hex-height/2)) solid transparent;
-    border-bottom: floor(calc($hex-height/2)) solid transparent;
-}
-.hex:before {
-    left: 100%;
-    border-left: floor(calc($hex-width/2)) solid var(--color);
-}
-.hex:after {
-    right: 100%;
-    width: 0;
-    border-right: floor(calc($hex-width/2)) solid var(--color);
-}
-</style>
+<style lang="scss" scoped></style>

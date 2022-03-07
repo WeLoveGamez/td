@@ -1,0 +1,350 @@
+// color-variables --use only hsl!
+:root {
+    --sniper: hsl(0, 50%, 60%);
+    --sniper-focus: hsl(0, 50%, 50%);
+    --ballista: hsl(244, 50%, 60%);
+    --ballista-focus: hsl(244, 50%, 50%);
+    --laser: hsl(303, 50%, 60%);
+    --laser-focus: hsl(303, 50%, 50%);
+    --path: hsl(39, 50%, 60%);
+    --path-focus: hsl(39, 50%, 50%);
+    --grass: hsl(135, 50%, 60%);
+    --grass-focus: hsl(135, 50%, 50%);
+    --water: hsl(202, 50%, 60%);
+    --water-focus: hsl(202, 50%, 50%);
+    --hill: hsl(93, 50%, 60%);
+    --hill-focus: hsl(93, 50%, 50%);
+    --forest: hsl(125, 36%, 35%);
+    --forest-focus: hsl(125, 36%, 25%);
+    --general: hsl(0, 0%, 23%);
+    --button: hsl(212, 80%, 52%);
+    --button-darker: hsl(212, 80%, 40%);
+    --button-darkest: hsl(212, 80%, 30%);
+}
+// game-background
+#game {
+    background-image: url('/bgbig.gif');
+    background-position: 0px -500px;
+}
+// hexagon-design
+$hex-width: 20px;
+// warning!
+// do not change anything under this line here!
+$hex-height: floor(calc(1.732 * $hex-width));
+.offsetRow:nth-child(2n + 1) {
+    margin-top: round(calc($hex-width - round(calc($hex-width * 0.1))));
+}
+.hex {
+    position: relative;
+    width: $hex-width;
+    height: $hex-height;
+    margin: 2px round(calc(($hex-width/2) / 2) + 1);
+    &.path {
+        background-color: var(--path);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--path);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--path);
+        }
+        &:focus {
+            background-color: var(--path-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--path-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--path-focus);
+            }
+        }
+    }
+    &.grass {
+        background-color: var(--grass);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--grass);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--grass);
+        }
+        &:focus {
+            background-color: var(--grass-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--grass-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--grass-focus);
+            }
+        }
+    }
+    &.hill {
+        background-color: var(--hill);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--hill);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--hill);
+        }
+        &:focus {
+            background-color: var(--hill-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--hill-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--hill-focus);
+            }
+        }
+    }
+    &.water {
+        background-color: var(--water);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--water);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--water);
+        }
+        &:focus {
+            background-color: var(--water-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--water-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--water-focus);
+            }
+        }
+    }
+    &.forest {
+        background-color: var(--forest);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--forest);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--forest);
+        }
+        &:focus {
+            background-color: var(--forest-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--forest-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--forest-focus);
+            }
+        }
+    }
+    &.sniper {
+        background-color: var(--sniper);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--sniper);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--sniper);
+        }
+        &:focus {
+            background-color: var(--sniper-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--sniper-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--sniper-focus);
+            }
+        }
+    }
+    &.laser {
+        background-color: var(--laser);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--laser);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--laser);
+        }
+        &:focus {
+            background-color: var(--laser-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--laser-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--laser-focus);
+            }
+        }
+    }
+    &.ballista {
+        background-color: var(--ballista);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--ballista);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--ballista);
+        }
+        &:focus {
+            background-color: var(--ballista-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--ballista-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--ballista-focus);
+            }
+        }
+    }
+}
+// buttons
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: calc($hex-width * 6);
+    height: $hex-height;
+    margin: 2px round(calc(($hex-width/2) / 2) + 10);
+    background-color: var(--button);
+    &:hover {
+        background-color: var(--button-darker);
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--button-darker);
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--button-darker);
+        }
+    }
+    &:active {
+        background-color: var(--button-darkest);
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--button-darkest);
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--button-darkest);
+        }
+    }
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        border-top: floor(calc($hex-height/2)) solid transparent;
+        border-bottom: floor(calc($hex-height/2)) solid transparent;
+    }
+    &::before {
+        left: 100%;
+        border-left: floor(calc($hex-width/2)) solid var(--button);
+    }
+    &:after {
+        right: 100%;
+        border-right: floor(calc($hex-width/2)) solid var(--button);
+        top: 0px;
+    }
+}
+
+// tower scss part
+
+// shopcard
+.card {
+    -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    background-color: var(--general) !important;
+    color: white !important;
+    .card-header {
+        -webkit-box-shadow: inset 16px 22px 20px -14px rgba(255, 255, 255, 0.42);
+        box-shadow: inset 16px 22px 20px -14px rgba(255, 255, 255, 0.226);
+    }
+    .card-body {
+        -webkit-box-shadow: inset 16px 22px 20px -14px rgba(255, 255, 255, 0.42);
+        box-shadow: inset 16px 0px 20px -14px rgba(255, 255, 255, 0.226);
+    }
+}
