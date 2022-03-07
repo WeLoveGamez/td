@@ -40,6 +40,7 @@ export interface Tower {
     filter: 'first' | 'last' | 'closest' | 'mostHealthy' | 'mostWounded' | 'slowest' | 'fastest'
     buildingFields: TileOption['type'][]
     level: number
+    shortcut: string
 }
 
 export interface Player {

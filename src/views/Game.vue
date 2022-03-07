@@ -4,7 +4,10 @@
         <div class="flex-1">
             <div class="row col-12 py-2">
                 <div class="col-1 offset-1">gold:</div>
-                <div class="col-3 text-start">{{ Math.round(player.gold) }}</div>
+                <div class="col-3 text-start">
+                    {{ Math.round(player.gold) }}
+                    <i class="fas fa-coins"></i>
+                </div>
                 <div class="col-1">HP:</div>
                 <div class="col-3 text-start">{{ player.hp }}</div>
                 <div class="col-1">wave:</div>
@@ -61,6 +64,7 @@
                                 <div class="card w-100 text-dark">
                                     <div class="card card-header p-0">{{ option.type }}</div>
                                     <div class="card card-body py-1 px-3">
+                                        <div>hotKey:{{ option.shortcut }}</div>
                                         <div>price:{{ tower([0, 0], option).price }}</div>
                                         <div>range:{{ tower([0, 0], option).range }}</div>
                                         <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
@@ -74,17 +78,38 @@
             </div>
             <div v-if="selectedTower" class="d-flex justify-content-center">
                 <div id="towermenu">
-                    <div class="card text-dark">
+                    <div class="card text-dark mt-2">
                         <div class="card card-header p-0">{{ selectedTower.type }}</div>
-                        <div class="card card-body d-flex">
+                        <div class="card card-body pb-1">
                             <div>
-                                <button class="btn btn-danger" type="button" @click.stop="sell(selectedTower!)">
-                                    sell Tower ${{ Math.floor(selectedTower.totalValue / 2) }}
-                                </button>
-                                <button class="btn btn-danger" type="button" @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)">
-                                    upgrade Tower ${{ Math.floor(selectedTower!.totalValue*0.3) }}
-                                </button>
-                                {{ selectedTower }}
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-danger w-50 me-2 d-flex justify-content-center" type="button" @click.stop="sell(selectedTower!)">
+                                        sell Tower
+                                        <div style="color: rgb(0, 230, 0)">
+                                            &nbsp;{{ Math.floor(selectedTower.totalValue / 2) }}
+                                            <i class="fas fa-coins"></i>
+                                        </div>
+                                    </button>
+                                    <button
+                                        class="btn btn-success w-50 ms-2 d-flex justify-content-center"
+                                        type="button"
+                                        @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)"
+                                    >
+                                        upgrade Tower
+                                        <div style="color: rgb(255, 0, 21)">
+                                            &nbsp;{{ Math.floor(selectedTower!.totalValue*0.3) }}
+                                            <i class="fas fa-coins"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="row col-12">
+                                    <div class="col-6">dmg/atttack: {{ selectedTower.atk.toFixed(2) }}</div>
+                                    <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atk * 0.04).toFixed(2) }}</div>
+                                    <div class="col-6">attacks/s: {{ selectedTower.atkspeed.toFixed(2) }}</div>
+                                    <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atkspeed * 0.04).toFixed(2) }}</div>
+                                    <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
+                                    <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -144,6 +169,7 @@ const TOWER_OPTIONS = {
         buildingFields: ['forest', 'hill', 'grass'],
         color: '#FF0000',
         type: 'sniper',
+        shortcut: '1',
     } as type.Tower,
     ballista: {
         atk: 15,
@@ -154,6 +180,7 @@ const TOWER_OPTIONS = {
         buildingFields: ['forest', 'hill', 'grass'],
         color: '#00FF00',
         type: 'ballista',
+        shortcut: '2',
     } as type.Tower,
     laser: {
         atk: 3,
@@ -162,8 +189,9 @@ const TOWER_OPTIONS = {
         price: 30,
         totalValue: 30,
         buildingFields: ['forest', 'hill', 'grass'],
-        color: '#0000FF',
+        color: '#AA00FF',
         type: 'laser',
+        shortcut: '3',
     } as type.Tower,
     canonship: {
         atk: 15,
@@ -174,6 +202,7 @@ const TOWER_OPTIONS = {
         buildingFields: ['water'],
         color: '#754c33',
         type: 'canonship',
+        shortcut: '4',
     } as type.Tower,
 }
 const TERRAIN = {
@@ -219,11 +248,14 @@ export default defineComponent({
                 top: 0,
                 position: [0, 0] as type.Vector,
             },
+
+            pressedKeys: {} as Record<string, boolean>,
         }
     },
     mounted() {
         this.createField()
         this.startGame()
+        document.addEventListener('keyup', e => e.code == 'Space' && (this.gameStarted = !this.gameStarted))
     },
     computed: {
         selectedTile(): type.FieldDiv | null {
@@ -246,6 +278,8 @@ export default defineComponent({
             this.gameStarted = false
             this.gamelooptick = 0
             this.wave = 0
+            this.player.gold = 100
+            this.player.hp = 100
             this.field = [] as unknown as type.Field
             this.enemies = []
             this.path = []
@@ -267,7 +301,7 @@ export default defineComponent({
                     }
                     if (i == 1 || i == 2) {
                         fieldRow.push({
-                            color: '#0000FF',
+                            color: '#0000CC',
                             type: 'water',
                             indices: [row, hex],
                         })
@@ -399,10 +433,17 @@ export default defineComponent({
         },
         //game
         startGame() {
+            window.onkeyup = (e: any) => {
+                this.pressedKeys[e.key] = false
+            }
+            window.onkeydown = (e: any) => {
+                this.pressedKeys[e.key] = true
+            }
             setInterval(() => {
                 if (this.gameStarted) {
                     this.gameLoop()
                 }
+                if (this.selectedTile) this.building()
             }, 1000 / 60)
         },
         gameLoop() {
@@ -431,6 +472,13 @@ export default defineComponent({
             if (toSpawn <= this.spawned) {
                 this.waveSpawn = false
                 this.spawned = 0
+            }
+        },
+        building() {
+            if (this.selectedTile?.tower == undefined) {
+                for (let tower of Object.values(TOWER_OPTIONS)) {
+                    if (this.pressedKeys[tower.shortcut]) this.buildTower(this.selectedTileIndices!, tower)
+                }
             }
         },
         //controls
@@ -514,9 +562,10 @@ export default defineComponent({
             this.enemies = this.enemies.filter(e => e !== enemy)
         },
         //towers
-        buildTower(position: type.Vector, tower: type.TowerOption) {
+        buildTower(position: type.Vector, tower: type.Tower) {
             this.selectedTileIndices = null
             if (!tower) return
+            if (this.player.gold - TOWER_OPTIONS[tower.type].price < 0) return
             let buffs = TERRAIN[this.field[position[0]][position[1]].type]
             let newTower = this.tower([position[0], position[1]], tower)
             newTower.atk *= buffs.atk
