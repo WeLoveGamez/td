@@ -11,16 +11,7 @@
             <div class="d-flex justify-content-center mt-3">
                 <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                     <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
-                        <div
-                            v-if="field[xIndex][yIndex].tower"
-                            :style="{
-                                '--range': hex.tower?.range + 'px',
-                                '--color': hex.tower?.color,
-                            }"
-                            class="hex attackrange"
-                            :id="xIndex + '|' + yIndex + ''"
-                            tabindex="0"
-                        >
+                        <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
                             <Teleport to="#polylineContainer">
                                 <polyline
                                     v-if="hex.tower?.target"
@@ -54,7 +45,7 @@
                         <div class="card text-dark">
                             <div class="card card-header">{{ option.type }}</div>
                             <div class="card card-body">
-                                <div class="hex mx-auto" :style="{ '--color': option.color }"></div>
+                                <div class="hex mx-auto" :class="option.type"></div>
                                 <div>price:{{ tower([0, 0], option).price }}</div>
                                 <div>range:{{ tower([0, 0], option).range }}</div>
                                 <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
