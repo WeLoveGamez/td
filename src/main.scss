@@ -1,11 +1,15 @@
 // color-variables --use only hsl!
 :root {
+    // towers
     --sniper: hsl(0, 50%, 60%);
     --sniper-focus: hsl(0, 50%, 50%);
     --ballista: hsl(244, 50%, 60%);
     --ballista-focus: hsl(244, 50%, 50%);
     --laser: hsl(303, 50%, 60%);
     --laser-focus: hsl(303, 50%, 50%);
+    --canonship: hsl(32, 60%, 28%);
+    --canonship-focus: hsl(32, 60%, 20%);
+    // fields
     --path: hsl(39, 50%, 60%);
     --path-focus: hsl(39, 50%, 50%);
     --grass: hsl(135, 50%, 60%);
@@ -17,9 +21,9 @@
     --forest: hsl(125, 36%, 35%);
     --forest-focus: hsl(125, 36%, 25%);
     --general: hsl(0, 0%, 23%);
-    --button: hsl(212, 80%, 52%);
-    --button-darker: hsl(212, 80%, 40%);
-    --button-darkest: hsl(212, 80%, 30%);
+    --button: hsl(0, 0%, 23%);
+    --button-darker: hsl(0, 0%, 40%);
+    --button-darkest: hsl(0, 0%, 10%);
 }
 // game-background
 #game {
@@ -39,6 +43,8 @@ $hex-height: floor(calc(1.732 * $hex-width));
     width: $hex-width;
     height: $hex-height;
     margin: 2px round(calc(($hex-width/2) / 2) + 1);
+    -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    box-shadow: 4px 7px 40px 0px rgba(0, 0, 0, 0.88);
     &.path {
         background-color: var(--path);
         &::before,
@@ -249,6 +255,36 @@ $hex-height: floor(calc(1.732 * $hex-width));
             }
         }
     }
+    &.canonship {
+        background-color: var(--canonship);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--canonship);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--canonship);
+        }
+        &:focus {
+            background-color: var(--canonship-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--canonship-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--canonship-focus);
+            }
+        }
+    }
     &.ballista {
         background-color: var(--ballista);
         &::before,
@@ -282,6 +318,7 @@ $hex-height: floor(calc(1.732 * $hex-width));
 }
 // buttons
 .button {
+    user-select: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -290,6 +327,9 @@ $hex-height: floor(calc(1.732 * $hex-width));
     height: $hex-height;
     margin: 2px round(calc(($hex-width/2) / 2) + 10);
     background-color: var(--button);
+    -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
+    color: white !important;
     &:hover {
         background-color: var(--button-darker);
         &::before {
@@ -302,6 +342,7 @@ $hex-height: floor(calc(1.732 * $hex-width));
         }
     }
     &:active {
+        transform: scale(0.9);
         background-color: var(--button-darkest);
         &::before {
             left: 100%;
@@ -334,6 +375,7 @@ $hex-height: floor(calc(1.732 * $hex-width));
 // tower scss part
 
 // shopcard
+
 .card {
     -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
     box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);

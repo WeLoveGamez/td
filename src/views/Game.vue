@@ -1,59 +1,241 @@
 <template>
-    <div id="game" style="height: 100vh; position: relative" @click="selectedTileIndices = null">
-        <!-- <Navbar></Navbar> -->
-        <div class="flex-1">
-            <div class="row col-12 py-2">
-                <div class="col-1 offset-1">gold:</div>
-                <div class="col-3 text-start">
-                    {{ Math.round(player.gold) }}
-                    <i class="fas fa-coins"></i>
-                </div>
-                <div class="col-1">HP:</div>
-                <div class="col-3 text-start">{{ player.hp }}</div>
-                <div class="col-1">wave:</div>
-                <div class="col-2 text-start">{{ wave }}</div>
+    <div id="game" style="height: 100vh; position: relative">
+        <div class="d-flex justify-content-center pt-2" style="position: relative; width: 100%">
+            <div class="button" :disabled="gameStarted" @click="reset()">reset</div>
+            <div class="button" :disabled="gameStarted" @click="gameLoop()">step</div>
+            <div class="button" @click="gameStarted = !gameStarted">
+                {{ gameStarted ? 'pause' : 'play' }}
             </div>
-
-            <div class="d-flex justify-content-center">
-                <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
-                    <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
-                        <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
-                            <Teleport to="#polylineContainer">
-                                <polyline
-                                    v-if="hex.tower?.target"
-                                    :points="`${getPosition(xIndex, yIndex).join(', ')} ${getEnemyPosition(hex.tower.target)?.join(', ')}`"
-                                    fill="none"
-                                    stroke="red"
-                                />
-                                <circle
-                                    v-if="selectedTile"
-                                    :cx="getPosition(xIndex, yIndex)[0]"
-                                    :cy="getPosition(xIndex, yIndex)[1]"
-                                    :r="hex.tower?.range"
-                                    fill="rgba(255, 0, 30, 0.13)"
-                                    :stroke="hex.tower?.color"
-                                />
-                            </Teleport>
+            <div class="button" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</div>
+        </div>
+        <!-- <div class="d-flex align-items-center justify-content-center" style="height: 100%"> -->
+        <div>
+            <div class="mt-4">
+                <div class="d-flex justify-content-center">
+                    <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
+                        <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
+                            <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
+                                <Teleport to="#polylineContainer">
+                                    <polyline
+                                        v-if="hex.tower?.target"
+                                        :points="`${getPosition(xIndex, yIndex).join(', ')} ${getEnemyPosition(hex.tower.target)?.join(', ')}`"
+                                        fill="none"
+                                        stroke="red"
+                                    />
+                                    <circle
+                                        v-if="selectedTileIndices && selectedTileIndices[0] == xIndex && selectedTileIndices[1] == yIndex"
+                                        :cx="getPosition(xIndex, yIndex)[0]"
+                                        :cy="getPosition(xIndex, yIndex)[1]"
+                                        :r="hex.tower?.range"
+                                        fill="rgba(255, 0, 30, 0.13)"
+                                        :stroke="hex.tower?.color"
+                                    />
+                                </Teleport>
+                            </div>
+                            <div v-else class="hex" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0"></div>
                         </div>
-                        <div v-else class="hex" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0"></div>
                     </div>
                 </div>
             </div>
+            <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
+                <!-- enemy  -->
+                <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" :fill="enemy.color" />
 
-            <div v-if="selectedTileIndices && !selectedTower">
-                <div class="d-flex justify-content-center my-3">
-                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="mx-4">
-                        <div v-if="tower([0, 0], option).buildingFields.some(f => f == selectedTile?.type)" @click.stop="buildTower(selectedTileIndices!, option)">
-                            <div id="shop">
-                                <div class="card text-dark">
-                                    <div class="card card-header p-0">{{ option.type }}</div>
-                                    <div class="card card-body py-1 px-3">
-                                        <div class="hex mx-auto" :class="option.type"></div>
-                                        <div>hotKey:{{ option.shortcut }}</div>
-                                        <div>price:{{ tower([0, 0], option).price }}</div>
-                                        <div>range:{{ tower([0, 0], option).range }}</div>
-                                        <div>attackspeed:{{ tower([0, 0], option).atkspeed }}</div>
-                                        <div>atk:{{ tower([0, 0], option).atk }}</div>
+                <polyline
+                    v-for="enemy of enemies"
+                    :key="JSON.stringify(enemy)"
+                    :points="`${enemy.cords[0] - enemy.size - 1},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size + 1},${enemy.cords[1] - enemy.size}`"
+                    fill="none"
+                    stroke="black"
+                    stroke-width="5px"
+                />
+                <polyline
+                    v-for="enemy of enemies"
+                    :key="JSON.stringify(enemy)"
+                    :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP},${
+                        enemy.cords[1] - enemy.size
+                    }`"
+                    fill="none"
+                    stroke="red"
+                    stroke-width="3px"
+                />
+                <!--  -->
+            </svg>
+        </div>
+        <!-- player´s menu -->
+        <div id="playMenu" class="card w-100 shadow-none" style="position: absolute; bottom: 0px">
+            <div class="card-body d-flex row col-12">
+                <div class="col-1">
+                    <div class="m-4">
+                        {{ Math.round(player.gold) }}
+                        <i class="fas fa-coins" style="color: rgb(214, 188, 38)"></i>
+                    </div>
+                    <div class="m-4">
+                        {{ player.hp }}
+                        <i class="fas fa-heart" style="color: rgb(187, 19, 19)"></i>
+                    </div>
+                    <div class="m-4">
+                        {{ wave }}
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                </div>
+                <div class="col-8">
+                    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                        <div style="position: fixed; margin-bottom: 0px; width: 51%" class="carousel-indicators">
+                            <button
+                                type="button"
+                                data-bs-target="#carouselExampleIndicators"
+                                data-bs-slide-to="0"
+                                class="active"
+                                aria-current="true"
+                                aria-label="Slide 1"
+                            ></button>
+                            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                        </div>
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <div class="row col-12">
+                                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
+                                        <div @click.stop="buildTower(selectedTileIndices!, option)">
+                                            <div id="shop">
+                                                <div class="card text-dark">
+                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-body">
+                                                        <div class="hex mx-auto" :class="option.type"></div>
+                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="row">
+                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
+                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
+                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="row col-12">
+                                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
+                                        <div @click.stop="buildTower(selectedTileIndices!, option)">
+                                            <div id="shop">
+                                                <div class="card text-dark">
+                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-body">
+                                                        <div class="hex mx-auto" :class="option.type"></div>
+                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="row">
+                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
+                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
+                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="row col-12">
+                                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
+                                        <div @click.stop="buildTower(selectedTileIndices!, option)">
+                                            <div id="shop">
+                                                <div class="card text-dark">
+                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-body">
+                                                        <div class="hex mx-auto" :class="option.type"></div>
+                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="row">
+                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
+                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
+                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button style="margin-left: -110px" class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button style="margin-right: -90px" class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                    <!-- <div class="row col-12">
+                        <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
+                            <div @click.stop="buildTower(selectedTileIndices!, option)">
+                                <div id="shop">
+                                    <div class="card text-dark">
+                                        <div class="card card-header p-0">{{ option.type }}</div>
+                                        <div class="card card-body">
+                                            <div class="hex mx-auto" :class="option.type"></div>
+                                            <div>hotKey:{{ option.shortcut }}</div>
+                                            <div class="row">
+                                                <div class="col-6 text-center p-0">price:{{ option.price }}</div>
+                                                <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
+                                                <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+                <div class="d-flex justify-content-center col-3">
+                    <div id="towermenu">
+                        <div v-if="selectedTower" class="card text-dark">
+                            <div class="card card-header p-0">{{ selectedTower.type }}</div>
+                            <div class="card card-body pb-1">
+                                <div>
+                                    <div class="d-flex justify-content-between">
+                                        <button class="btn btn-danger w-50 me-2 d-flex justify-content-center" type="button" @click.stop="sell(selectedTower!)">
+                                            sell Tower
+                                            <div style="color: rgb(0, 230, 0)">
+                                                &nbsp;{{ Math.floor(selectedTower.totalValue / 2) }}
+                                                <i class="fas fa-coins"></i>
+                                            </div>
+                                        </button>
+                                        <button
+                                            class="btn btn-success w-50 ms-2 d-flex justify-content-center"
+                                            type="button"
+                                            @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)"
+                                        >
+                                            upgrade Tower
+                                            <div style="color: rgb(255, 0, 21)">
+                                                &nbsp;{{ Math.floor(selectedTower!.totalValue*0.3) }}
+                                                <i class="fas fa-coins"></i>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <div class="row col-12">
+                                        <div class="col-6">dmg/atttack: {{ selectedTower.atk.toFixed(2) }}</div>
+                                        <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atk * 0.04).toFixed(2) }}</div>
+                                        <div class="col-6">attacks/s: {{ selectedTower.atkspeed.toFixed(2) }}</div>
+                                        <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atkspeed * 0.04).toFixed(2) }}</div>
+                                        <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
+                                        <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -61,80 +243,7 @@
                     </div>
                 </div>
             </div>
-            <div v-if="selectedTower" class="d-flex justify-content-center">
-                <div id="towermenu">
-                    <div class="card text-dark mt-2">
-                        <div class="card card-header p-0">{{ selectedTower.type }}</div>
-                        <div class="card card-body pb-1">
-                            <div>
-                                <div class="d-flex justify-content-between">
-                                    <button class="btn btn-danger w-50 me-2 d-flex justify-content-center" type="button" @click.stop="sell(selectedTower!)">
-                                        sell Tower
-                                        <div style="color: rgb(0, 230, 0)">
-                                            &nbsp;{{ Math.floor(selectedTower.totalValue / 2) }}
-                                            <i class="fas fa-coins"></i>
-                                        </div>
-                                    </button>
-                                    <button
-                                        class="btn btn-success w-50 ms-2 d-flex justify-content-center"
-                                        type="button"
-                                        @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)"
-                                    >
-                                        upgrade Tower
-                                        <div style="color: rgb(255, 0, 21)">
-                                            &nbsp;{{ Math.floor(selectedTower!.totalValue*0.3) }}
-                                            <i class="fas fa-coins"></i>
-                                        </div>
-                                    </button>
-                                </div>
-                                <div class="row col-12">
-                                    <div class="col-6">dmg/atttack: {{ selectedTower.atk.toFixed(2) }}</div>
-                                    <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atk * 0.04).toFixed(2) }}</div>
-                                    <div class="col-6">attacks/s: {{ selectedTower.atkspeed.toFixed(2) }}</div>
-                                    <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atkspeed * 0.04).toFixed(2) }}</div>
-                                    <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
-                                    <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex justify-content-center" style="position: absolute; bottom: 0; width: 100%">
-                <div class="button" :disabled="gameStarted" @click="reset()">reset</div>
-                <!-- <button class="btn btn-primary shadow-none m-2" :disabled="gameStarted" @click="testSetup()">setup</button> -->
-                <div class="button" :disabled="gameStarted" @click="gameLoop()">step</div>
-                <div class="button" @click="gameStarted = !gameStarted">
-                    {{ gameStarted ? 'pause' : 'play' }}
-                </div>
-                <div class="button" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</div>
-            </div>
         </div>
-
-        <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
-            <!-- enemy  -->
-            <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" :fill="enemy.color" />
-
-            <polyline
-                v-for="enemy of enemies"
-                :key="JSON.stringify(enemy)"
-                :points="`${enemy.cords[0] - enemy.size - 1},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size + 1},${enemy.cords[1] - enemy.size}`"
-                fill="none"
-                stroke="black"
-                stroke-width="5px"
-            />
-            <polyline
-                v-for="enemy of enemies"
-                :key="JSON.stringify(enemy)"
-                :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP},${
-                    enemy.cords[1] - enemy.size
-                }`"
-                fill="none"
-                stroke="red"
-                stroke-width="3px"
-            />
-            <!--  -->
-        </svg>
     </div>
 </template>
 
@@ -211,7 +320,7 @@ export default defineComponent({
 
             hexagonSize: 50,
             fieldWidth: 50,
-            fieldHeight: 20,
+            fieldHeight: 18,
 
             field: [] as unknown as type.Field,
 
@@ -239,10 +348,11 @@ export default defineComponent({
             pressedKeys: {} as Record<string, boolean>,
         }
     },
-    mounted() {
-        this.createField()
+    async mounted() {
+        await this.createField()
         this.startGame()
         document.addEventListener('keyup', e => e.code == 'Space' && (this.gameStarted = !this.gameStarted))
+        document.getElementById('0|0')!.click()
     },
     computed: {
         selectedTile(): type.FieldDiv | null {
@@ -550,7 +660,7 @@ export default defineComponent({
         },
         //towers
         buildTower(position: type.Vector, tower: type.Tower) {
-            this.selectedTileIndices = null
+            // this.selectedTileIndices = null
             if (!tower) return
             if (this.player.gold - TOWER_OPTIONS[tower.type].price < 0) return
             let buffs = TERRAIN[this.field[position[0]][position[1]].type]
