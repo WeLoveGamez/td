@@ -1,14 +1,16 @@
 <template>
-    <div class="container d-flex align-items-center" style="height: 100vh">
-        <div class="row col-12 d-flex align-items-center justify-content-around">
-            <div class="col-3 m-3 btn btn-outline cardOption p-0" @click="openBuilder()">
-                <div>MapBuilder</div>
-            </div>
-            <div class="col-3 m-3 btn btn-outline cardOption p-0" @click="openGame()">
-                <div>Game</div>
-            </div>
-            <div class="col-3 m-3 btn btn-outline cardOption p-0" @click="openStats()">
-                <div>Statistics</div>
+    <div id="game">
+        <div class="d-flex align-items-center" style="height: 100vh">
+            <div class="row col-12 d-flex align-items-center justify-content-around">
+                <div class="col-3 button p-0" @click="openBuilder()">
+                    <div>MapBuilder</div>
+                </div>
+                <div class="col-3 button p-0" @click="openGame()">
+                    <div>Game</div>
+                </div>
+                <div class="col-3 button p-0" @click="openStats()">
+                    <div>Statistics</div>
+                </div>
             </div>
         </div>
     </div>

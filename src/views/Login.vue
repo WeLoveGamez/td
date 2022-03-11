@@ -1,24 +1,28 @@
 <template>
-    <div class="container d-flex align-items-stretch justify-content-center flex-column" style="height: 100vh">
-        <div class="card w-75" style="margin-left: 12.5%">
-            <div class="card-header">Login</div>
-            <div class="card-body">
-                <form @submit.prevent="login()" autocomplete="off">
-                    <div class="m-4 alert alert-danger text-center" v-if="error">Username or password is not correct</div>
-                    <div class="p-4 row col-12">
-                        <div class="col-6 offset-3">
-                            <input minlength="3" class="form-control" id="email" type="text" placeholder="email" v-model="email" autocomplete="off" />
+    <div id="game">
+        <div class="d-flex justify-content-center flex-column" style="height: 100vh">
+            <div class="card w-50" style="margin-left: 25%">
+                <div class="card-header">Login</div>
+                <div class="card-body">
+                    <form autocomplete="off">
+                        <div class="m-4 alert alert-danger text-center" v-if="error">Username or password is not correct</div>
+                        <div class="p-1 row col-12">
+                            <div class="col-6 offset-3">
+                                <input minlength="3" class="form-control" id="email" type="text" placeholder="email" v-model="email" autocomplete="off" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="p-4 row col-12">
-                        <div class="col-6 offset-3">
-                            <input minlength="3" class="form-control" id="password" type="password" placeholder="passwort" v-model="password" autocomplete="off" />
+                        <div class="p-1 row col-12">
+                            <div class="col-6 offset-3">
+                                <input minlength="3" class="form-control" id="password" type="password" placeholder="passwort" v-model="password" autocomplete="off" />
+                            </div>
                         </div>
-                    </div>
-                    <button class="btn btn-success m-4 col-2" type="submit" v-if="!loggingIn">Anmelden</button>
-                    <span v-if="loggingIn" class="m-4 spinner-border spinner-border-sm text-primary"></span>
-                    <button class="btn btn-info m-4 col-2" type="button" @click="register()">Registrieren</button>
-                </form>
+                        <div class="row d-flex justify-content-center">
+                            <div class="button m-4 col-2" @click="login()" v-if="!loggingIn">Anmelden</div>
+                            <span v-if="loggingIn" class="m-4 spinner-border spinner-border-sm text-primary"></span>
+                            <div class="button m-4 col-2" type="button" v-if="!loggingIn" @click="register()">Registrieren</div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -63,7 +67,14 @@ export default defineComponent({
 </script>
 <style lang="scss" scoped>
 * {
+    text-align: center;
     font-family: Arial, Helvetica, sans-serif;
-    color: black;
+    color: rgb(255, 255, 255);
+}
+.row {
+    margin: 0px !important;
+    & span {
+        padding: 0% !important;
+    }
 }
 </style>

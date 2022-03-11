@@ -84,6 +84,7 @@
                         <div style="position: fixed; margin-bottom: 0px; width: 51%" class="carousel-indicators">
                             <button
                                 type="button"
+                                data-interval="false"
                                 data-bs-target="#carouselExampleIndicators"
                                 data-bs-slide-to="0"
                                 class="active"
@@ -100,17 +101,17 @@
                                         <div @click.stop="buildTower(selectedTileIndices!, option)">
                                             <div id="shop">
                                                 <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-header text-center">{{ option.type }}</div>
                                                     <div class="card card-body">
                                                         <div class="hex mx-auto" :class="option.type"></div>
-                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="text-center">hotKey: {{ option.shortcut }}</div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                            <div class="col-6">price: {{ option.price }}</div>
+                                                            <div class="col-6">range: {{ option.range }}</div>
                                                         </div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                            <div class="col-6">attackspeed: {{ option.atkspeed }}</div>
+                                                            <div class="col-6">atk: {{ option.atk }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -125,17 +126,17 @@
                                         <div @click.stop="buildTower(selectedTileIndices!, option)">
                                             <div id="shop">
                                                 <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-header text-center">{{ option.type }}</div>
                                                     <div class="card card-body">
                                                         <div class="hex mx-auto" :class="option.type"></div>
-                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="text-center">hotKey: {{ option.shortcut }}</div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                            <div class="col-6">price: {{ option.price }}</div>
+                                                            <div class="col-6">range: {{ option.range }}</div>
                                                         </div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                            <div class="col-6">attackspeed: {{ option.atkspeed }}</div>
+                                                            <div class="col-6">atk: {{ option.atk }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -150,17 +151,17 @@
                                         <div @click.stop="buildTower(selectedTileIndices!, option)">
                                             <div id="shop">
                                                 <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-header text-center">{{ option.type }}</div>
                                                     <div class="card card-body">
                                                         <div class="hex mx-auto" :class="option.type"></div>
-                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="text-center">hotKey:{{ option.shortcut }}</div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                            <div class="col-6">price: {{ option.price }}</div>
+                                                            <div class="col-6">range: {{ option.range }}</div>
                                                         </div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                            <div class="col-6">attackspeed: {{ option.atkspeed }}</div>
+                                                            <div class="col-6">atk: {{ option.atk }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -206,30 +207,30 @@
                 <div class="d-flex justify-content-center col-3">
                     <div id="towermenu">
                         <div v-if="selectedTower" class="card text-dark">
-                            <div class="card card-header p-0">{{ selectedTower.type }}</div>
+                            <div class="card card-header text-center">{{ selectedTower.type }}</div>
                             <div class="card card-body pb-1">
                                 <div>
                                     <div class="d-flex justify-content-between">
-                                        <button class="btn btn-danger w-50 me-2 d-flex justify-content-center" type="button" @click.stop="sell(selectedTower!)">
+                                        <div class="button w-50 p-1 me-3 d-flex justify-content-center" type="button" @click.stop="sell(selectedTower!)">
                                             sell Tower
                                             <div style="color: rgb(0, 230, 0)">
-                                                &nbsp;{{ Math.floor(selectedTower.totalValue / 2) }}
-                                                <i class="fas fa-coins"></i>
+                                                &nbsp;+{{ Math.floor(selectedTower.totalValue / 2) }}
+                                                <i class="fas fa-coins" style="color: rgb(214, 188, 38)"></i>
                                             </div>
-                                        </button>
-                                        <button
-                                            class="btn btn-success w-50 ms-2 d-flex justify-content-center"
+                                        </div>
+                                        <div
+                                            class="button w-50 p-1 ms-3 d-flex justify-content-center"
                                             type="button"
                                             @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)"
                                         >
                                             upgrade Tower
                                             <div style="color: rgb(255, 0, 21)">
-                                                &nbsp;{{ Math.floor(selectedTower!.totalValue*0.3) }}
-                                                <i class="fas fa-coins"></i>
+                                                &nbsp;-{{ Math.floor(selectedTower!.totalValue*0.3) }}
+                                                <i class="fas fa-coins" style="color: rgb(214, 188, 38)"></i>
                                             </div>
-                                        </button>
+                                        </div>
                                     </div>
-                                    <div class="row col-12">
+                                    <div class="row m-1 col-12">
                                         <div class="col-6">dmg/atttack: {{ selectedTower.atk.toFixed(2) }}</div>
                                         <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atk * 0.04).toFixed(2) }}</div>
                                         <div class="col-6">attacks/s: {{ selectedTower.atkspeed.toFixed(2) }}</div>
@@ -319,8 +320,8 @@ export default defineComponent({
             } as type.Player,
 
             hexagonSize: 50,
-            fieldWidth: 50,
-            fieldHeight: 18,
+            fieldWidth: 32,
+            fieldHeight: 12,
 
             field: [] as unknown as type.Field,
 
@@ -783,4 +784,8 @@ export default defineComponent({
     },
 })
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.card-body {
+    border-radius: 0rem !important;
+}
+</style>

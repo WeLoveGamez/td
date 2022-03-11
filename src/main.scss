@@ -20,9 +20,9 @@
     --hill-focus: hsl(93, 50%, 50%);
     --forest: hsl(125, 36%, 35%);
     --forest-focus: hsl(125, 36%, 25%);
-    --general: hsl(0, 0%, 23%);
-    --button: hsl(0, 0%, 23%);
-    --button-darker: hsl(0, 0%, 40%);
+    --general: hsl(0, 0%, 41%);
+    --button: hsl(0, 0%, 20%);
+    --button-darker: hsl(0, 0%, 15%);
     --button-darkest: hsl(0, 0%, 10%);
 }
 // game-background
@@ -31,7 +31,7 @@
     background-position: 0px -500px;
 }
 // hexagon-design
-$hex-width: 20px;
+$hex-width: 28px;
 // warning!
 // do not change anything under this line here!
 $hex-height: floor(calc(1.732 * $hex-width));
