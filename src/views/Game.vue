@@ -26,7 +26,7 @@
                                     stroke="red"
                                 />
                                 <circle
-                                    v-if="selectedTile"
+                                    v-if="selectedTileIndices && selectedTileIndices[0] == xIndex && selectedTileIndices[1] == yIndex"
                                     :cx="getPosition(xIndex, yIndex)[0]"
                                     :cy="getPosition(xIndex, yIndex)[1]"
                                     :r="hex.tower?.range"
@@ -95,6 +95,21 @@
                                     <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
                                     <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
                                 </div>
+                                <div>dmg dealt: {{ Math.floor(selectedTower.dmgDealt) }}</div>
+                                <div class="d-flex justify-content-center">
+                                    target:
+                                    <div @click.stop="">
+                                        <select v-model="selectedTower.filter">
+                                            <option
+                                                v-for="prop in ['first', 'last', 'closest', 'mostHealthy', 'mostWounded', 'slowest', 'fastest']"
+                                                :key="prop"
+                                                :value="prop"
+                                            >
+                                                {{ prop }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -143,23 +158,22 @@ import { defineComponent } from 'vue'
 import * as type from '@/types'
 
 import { add, subtract, length, lengthSquared, divide } from '@/calc'
-// import Navbar from '@/components/Navbar.vue'
 
 const TOWER_OPTIONS = {
     sniper: {
         atk: 30,
-        range: 500,
+        range: 300,
         atkspeed: 1,
-        price: 20,
-        totalValue: 20,
+        price: 25,
+        totalValue: 25,
         buildingFields: ['forest', 'hill', 'grass'],
         color: '#FF0000',
         type: 'sniper',
         shortcut: '1',
     } as type.Tower,
     ballista: {
-        atk: 15,
-        range: 150,
+        atk: 10,
+        range: 75,
         atkspeed: 3,
         price: 25,
         totalValue: 25,
@@ -170,10 +184,10 @@ const TOWER_OPTIONS = {
     } as type.Tower,
     laser: {
         atk: 3,
-        range: 150,
+        range: 100,
         atkspeed: 10,
-        price: 30,
-        totalValue: 30,
+        price: 25,
+        totalValue: 25,
         buildingFields: ['forest', 'hill', 'grass'],
         color: '#AA00FF',
         type: 'laser',
@@ -181,14 +195,36 @@ const TOWER_OPTIONS = {
     } as type.Tower,
     canonship: {
         atk: 15,
-        range: 250,
+        range: 150,
         atkspeed: 2,
-        price: 40,
-        totalValue: 40,
+        price: 25,
+        totalValue: 25,
         buildingFields: ['water'],
         color: '#754c33',
         type: 'canonship',
         shortcut: '4',
+    } as type.Tower,
+    bank: {
+        atk: 0,
+        range: 0,
+        atkspeed: 0,
+        price: 100,
+        totalValue: 100,
+        buildingFields: ['grass'],
+        color: '#754c33',
+        type: 'bank',
+        shortcut: '5',
+    } as type.Tower,
+    freezer: {
+        atk: 10,
+        range: 100,
+        atkspeed: 2,
+        price: 30,
+        totalValue: 30,
+        buildingFields: ['forest', 'hill', 'grass'],
+        color: '#754c33',
+        type: 'freezer',
+        shortcut: '6',
     } as type.Tower,
 }
 const TERRAIN = {
@@ -210,8 +246,8 @@ export default defineComponent({
             } as type.Player,
 
             hexagonSize: 50,
-            fieldWidth: 50,
-            fieldHeight: 20,
+            fieldWidth: 30,
+            fieldHeight: 15,
 
             field: [] as unknown as type.Field,
 
@@ -228,6 +264,8 @@ export default defineComponent({
             spawned: 0,
 
             selectedTileIndices: null as type.Vector | null,
+
+            bonus: false,
 
             shopSize: 20,
             shopPosition: {
@@ -257,6 +295,9 @@ export default defineComponent({
         },
         selectedTower(): type.Tower | null {
             return this.selectedTile?.tower ?? null
+        },
+        banks(): type.Tower[] | null {
+            return this.towers.filter(t => t.type == 'bank')
         },
     },
     methods: {
@@ -494,9 +535,11 @@ export default defineComponent({
                             HP: hp,
                             size: 16,
                             nextPathNumber: 1,
+                            baseSpeed: 1.5,
                             speed: 1.5,
                             distanceTravelled: 0,
                             color: 'blue',
+                            slowduration: 0,
                         } as type.Enemy
                         this.enemies.push(enemy)
                     }
@@ -511,9 +554,11 @@ export default defineComponent({
                             HP: hp,
                             size: 16,
                             nextPathNumber: 1,
+                            baseSpeed: 0.8,
                             speed: 0.8,
                             distanceTravelled: 0,
                             color: 'yellow',
+                            slowduration: 0,
                         } as type.Enemy
                         this.enemies.push(enemy)
                     }
@@ -525,8 +570,11 @@ export default defineComponent({
             this.enemies = this.enemies.filter(e => e.HP > 0)
 
             if (this.enemies.length == 0) {
-                if (!this.waveSpawn) this.wave++
-                this.waveSpawn = true
+                if (!this.waveSpawn) {
+                    this.wave++
+                    this.waveSpawn = true
+                    this.bankBonus()
+                }
             }
         },
         moveEnemy() {
@@ -534,6 +582,12 @@ export default defineComponent({
                 if (enemy.nextPathNumber < this.path.length) {
                     let targetPosition = this.getPosition(...this.path[enemy.nextPathNumber].indices)
                     let movement = subtract(targetPosition, enemy.cords)
+                    if (enemy.slowduration > 0) {
+                        enemy.slowduration--
+                        enemy.speed = 0.4 * enemy.baseSpeed
+                    } else {
+                        enemy.speed = enemy.baseSpeed
+                    }
                     enemy.cords = add(enemy.cords, divide(movement, length(movement) / enemy.speed))
                     enemy.distanceTravelled += length(divide(movement, length(movement) / enemy.speed))
                     if (lengthSquared(subtract(enemy.cords, targetPosition)) < enemy.speed ** 2) {
@@ -547,6 +601,17 @@ export default defineComponent({
         survivedEnemy(enemy: type.Enemy) {
             this.player.hp--
             this.enemies = this.enemies.filter(e => e !== enemy)
+        },
+        //utility
+        bankBonus() {
+            if (this.banks?.length)
+                for (let b of this.banks) {
+                    let bonus = 0
+                    bonus = this.player.gold * 0.01
+                    if (bonus > 100) bonus = 100
+                    this.player.gold += bonus
+                    console.log(bonus)
+                }
         },
         //towers
         buildTower(position: type.Vector, tower: type.Tower) {
@@ -579,6 +644,7 @@ export default defineComponent({
                 target: null,
                 filter: 'first',
                 level: 1,
+                dmgDealt: 0,
             }
         },
         getTowerTarget(t: type.Tower) {
@@ -638,8 +704,12 @@ export default defineComponent({
         },
         towerAttack(tower: type.Tower) {
             let Index = this.enemies.findIndex(e => e.id == tower.target)
-            if (Index != -1) this.enemies[Index].HP -= tower.atk
-            if (Index != -1 && this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
+            if (Index != -1) {
+                this.enemies[Index].HP -= tower.atk
+                tower.dmgDealt += tower.atk
+                if (tower.type == 'freezer') this.enemies[Index].slowduration += 45 //duration in ticks
+                if (this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
+            }
         },
 
         //general

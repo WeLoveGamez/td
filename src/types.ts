@@ -22,9 +22,11 @@ export interface Enemy {
     HP: number
     id: string
     nextPathNumber: number
+    baseSpeed: number
     speed: number
     distanceTravelled: number
     color: string
+    slowduration: number
 }
 
 export interface Tower {
@@ -34,13 +36,14 @@ export interface Tower {
     price: number
     totalValue: number
     color: string
-    type: 'sniper' | 'ballista' | 'laser' | 'canonship'
+    type: 'sniper' | 'ballista' | 'laser' | 'canonship' | 'bank' | 'freezer'
     indices: Vector
     target: string | null
     filter: 'first' | 'last' | 'closest' | 'mostHealthy' | 'mostWounded' | 'slowest' | 'fastest'
     buildingFields: TileOption['type'][]
     level: number
     shortcut: string
+    dmgDealt: number
 }
 
 export interface Player {
@@ -63,7 +66,7 @@ export interface TileOption extends ShopOption {
     type: 'path' | 'water' | 'hill' | 'grass' | 'forest'
 }
 export interface TowerOption extends ShopOption {
-    type: 'sniper' | 'ballista' | 'laser' | 'canonship'
+    type: 'sniper' | 'ballista' | 'laser' | 'canonship' | 'bank' | 'freezer'
 }
 
 export type Vector = [number, number]
