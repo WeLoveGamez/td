@@ -80,37 +80,35 @@
                     </div>
                 </div>
                 <div class="col-8">
-                    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
                         <div style="position: fixed; margin-bottom: 0px; width: 51%" class="carousel-indicators">
+                            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"></button>
                             <button
+                                v-for="index in Math.ceil((Object.values(TOWER_OPTIONS).length - 4) / 4)"
+                                :key="JSON.stringify(index)"
                                 type="button"
                                 data-bs-target="#carouselExampleIndicators"
-                                data-bs-slide-to="0"
-                                class="active"
-                                aria-current="true"
-                                aria-label="Slide 1"
+                                :data-bs-slide-to="index"
                             ></button>
-                            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
                         </div>
                         <div class="carousel-inner">
                             <div class="carousel-item active">
                                 <div class="row col-12">
-                                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
-                                        <div @click.stop="buildTower(selectedTileIndices!, option)">
+                                    <div v-for="option in (['sniper', 'ballista', 'laser', 'canonship'] as const)" :key="option" class="col-3">
+                                        <div @click.stop="buildTower(selectedTileIndices!, TOWER_OPTIONS[option])">
                                             <div id="shop">
                                                 <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-header p-0">{{ TOWER_OPTIONS[option].type }}</div>
                                                     <div class="card card-body">
-                                                        <div class="hex mx-auto" :class="option.type"></div>
-                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="hex mx-auto" :class="TOWER_OPTIONS[option].type"></div>
+                                                        <div>hotKey:{{ TOWER_OPTIONS[option].shortcut }}</div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                            <div class="col-6 text-center p-0">price:{{ TOWER_OPTIONS[option].price }}</div>
+                                                            <div class="col-6 text-center p-0">range:{{ TOWER_OPTIONS[option].range }}</div>
                                                         </div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                            <div class="col-6 text-center p-0">attackspeed:{{ TOWER_OPTIONS[option].atkspeed }}</div>
+                                                            <div class="col-6 text-center p-0">atk:{{ TOWER_OPTIONS[option].atk }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -121,66 +119,26 @@
                             </div>
                             <div class="carousel-item">
                                 <div class="row col-12">
-                                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
-                                        <div @click.stop="buildTower(selectedTileIndices!, option)">
+                                    <div v-for="option in (['bank','freezer'] as const)" :key="option" class="col-3">
+                                        <div @click.stop="buildTower(selectedTileIndices!, TOWER_OPTIONS[option])">
                                             <div id="shop">
                                                 <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ option.type }}</div>
+                                                    <div class="card card-header p-0">{{ TOWER_OPTIONS[option].type }}</div>
                                                     <div class="card card-body">
-                                                        <div class="hex mx-auto" :class="option.type"></div>
-                                                        <div>hotKey:{{ option.shortcut }}</div>
+                                                        <div class="hex mx-auto" :class="TOWER_OPTIONS[option].type"></div>
+                                                        <div>hotKey:{{ TOWER_OPTIONS[option].shortcut }}</div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
+                                                            <div class="col-6 text-center p-0">price:{{ TOWER_OPTIONS[option].price }}</div>
+                                                            <div class="col-6 text-center p-0">range:{{ TOWER_OPTIONS[option].range }}</div>
                                                         </div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
+                                                            <div class="col-6 text-center p-0">attackspeed:{{ TOWER_OPTIONS[option].atkspeed }}</div>
+                                                            <div class="col-6 text-center p-0">atk:{{ TOWER_OPTIONS[option].atk }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row col-12">
-                                    <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
-                                        <div @click.stop="buildTower(selectedTileIndices!, option)">
-                                            <div id="shop">
-                                                <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ option.type }}</div>
-                                                    <div class="card card-body">
-                                                        <div class="hex mx-auto" :class="option.type"></div>
-                                                        <div>hotKey:{{ option.shortcut }}</div>
-                                                        <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ option.range }}</div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>dmg dealt: {{ Math.floor(selectedTower.dmgDealt) }}</div>
-                                <div class="d-flex justify-content-center">
-                                    target:
-                                    <div @click.stop="">
-                                        <select v-model="selectedTower.filter">
-                                            <option
-                                                v-for="prop in ['first', 'last', 'closest', 'mostHealthy', 'mostWounded', 'slowest', 'fastest']"
-                                                :key="prop"
-                                                :value="prop"
-                                            >
-                                                {{ prop }}
-                                            </option>
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -194,29 +152,6 @@
                             <span class="visually-hidden">Next</span>
                         </button>
                     </div>
-                    <!-- <div class="row col-12">
-                        <div v-for="option in TOWER_OPTIONS" :key="option.type" class="col-3">
-                            <div @click.stop="buildTower(selectedTileIndices!, option)">
-                                <div id="shop">
-                                    <div class="card text-dark">
-                                        <div class="card card-header p-0">{{ option.type }}</div>
-                                        <div class="card card-body">
-                                            <div class="hex mx-auto" :class="option.type"></div>
-                                            <div>hotKey:{{ option.shortcut }}</div>
-                                            <div class="row">
-                                                <div class="col-6 text-center p-0">price:{{ option.price }}</div>
-                                                <div class="col-6 text-center p-0">range:{{ option.range }}</div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-6 text-center p-0">attackspeed:{{ option.atkspeed }}</div>
-                                                <div class="col-6 text-center p-0">atk:{{ option.atk }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
                 </div>
                 <div class="d-flex justify-content-center col-3">
                     <div id="towermenu">
@@ -251,6 +186,23 @@
                                         <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atkspeed * 0.04).toFixed(2) }}</div>
                                         <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
                                         <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
+                                    </div>
+                                    <div v-if="selectedTower">
+                                        <div>dmg dealt: {{ Math.floor(selectedTower.dmgDealt) }}</div>
+                                        <div class="d-flex justify-content-center">
+                                            target:
+                                            <div @click.stop="">
+                                                <select v-model="selectedTower.filter">
+                                                    <option
+                                                        v-for="prop in ['first', 'last', 'closest', 'mostHealthy', 'mostWounded', 'slowest', 'fastest']"
+                                                        :key="prop"
+                                                        :value="prop"
+                                                    >
+                                                        {{ prop }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
