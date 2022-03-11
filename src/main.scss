@@ -9,6 +9,10 @@
     --laser-focus: hsl(303, 50%, 50%);
     --canonship: hsl(32, 60%, 28%);
     --canonship-focus: hsl(32, 60%, 20%);
+    --bank: hsl(0, 50%, 60%);
+    --bank-focus: hsl(0, 50%, 50%);
+    --freezer: hsl(0, 50%, 60%);
+    --freezer-focus: hsl(0, 50%, 50%);
     // fields
     --path: hsl(39, 50%, 60%);
     --path-focus: hsl(39, 50%, 50%);
@@ -312,6 +316,66 @@ $hex-height: floor(calc(1.732 * $hex-width));
             &::before {
                 left: 100%;
                 border-left: floor(calc($hex-width/2)) solid var(--ballista-focus);
+            }
+        }
+    }
+    &.bank {
+        background-color: var(--bank);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--bank);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--bank);
+        }
+        &:focus {
+            background-color: var(--bank-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--bank-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--bank-focus);
+            }
+        }
+    }
+    &.freezer {
+        background-color: var(--freezer);
+        &::before,
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            border-top: floor(calc($hex-height/2)) solid transparent;
+            border-bottom: floor(calc($hex-height/2)) solid transparent;
+        }
+        &::after {
+            right: 100%;
+            border-right: floor(calc($hex-width/2)) solid var(--freezer);
+        }
+        &::before {
+            left: 100%;
+            border-left: floor(calc($hex-width/2)) solid var(--freezer);
+        }
+        &:focus {
+            background-color: var(--freezer-focus);
+            &::after {
+                right: 100%;
+                border-right: floor(calc($hex-width/2)) solid var(--freezer-focus);
+            }
+            &::before {
+                left: 100%;
+                border-left: floor(calc($hex-width/2)) solid var(--freezer-focus);
             }
         }
     }
