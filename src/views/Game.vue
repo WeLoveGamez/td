@@ -63,7 +63,7 @@
             </svg>
         </div>
         <!-- player´s menu -->
-        <div id="playMenu" class="card w-100 shadow-none" style="position: absolute; bottom: 0px">
+        <div id="playMenu" class="card w-100 shadow-none" style="position: absolute; bottom: 0px; height: 25%">
             <div class="card-body d-flex row col-12">
                 <div class="col-1">
                     <div class="m-4">
