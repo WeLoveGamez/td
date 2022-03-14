@@ -3,16 +3,16 @@
     // towers
     --sniper: hsl(0, 50%, 60%);
     --sniper-focus: hsl(0, 50%, 50%);
-    --ballista: hsl(244, 50%, 60%);
-    --ballista-focus: hsl(244, 50%, 50%);
-    --laser: hsl(303, 50%, 60%);
-    --laser-focus: hsl(303, 50%, 50%);
+    --ballista: hsl(318, 99%, 36%);
+    --ballista-focus: hsl(318, 99%, 26%);
+    --laser: hsl(303, 50%, 70%);
+    --laser-focus: hsl(303, 50%, 60%);
     --canonship: hsl(32, 60%, 28%);
     --canonship-focus: hsl(32, 60%, 20%);
-    --bank: hsl(0, 50%, 60%);
-    --bank-focus: hsl(0, 50%, 50%);
-    --freezer: hsl(0, 50%, 60%);
-    --freezer-focus: hsl(0, 50%, 50%);
+    --bank: hsl(59, 100%, 59%);
+    --bank-focus: hsl(59, 100%, 49%);
+    --freezer: hsl(221, 100%, 67%);
+    --freezer-focus: hsl(221, 100%, 57%);
     // fields
     --path: hsl(39, 50%, 60%);
     --path-focus: hsl(39, 50%, 50%);
@@ -20,8 +20,8 @@
     --grass-focus: hsl(135, 50%, 50%);
     --water: hsl(202, 50%, 60%);
     --water-focus: hsl(202, 50%, 50%);
-    --hill: hsl(93, 50%, 60%);
-    --hill-focus: hsl(93, 50%, 50%);
+    --hill: hsl(93, 22%, 67%);
+    --hill-focus: hsl(93, 22%, 57%);
     --forest: hsl(125, 36%, 35%);
     --forest-focus: hsl(125, 36%, 25%);
     --general: hsl(0, 0%, 23%);
@@ -35,7 +35,7 @@
     background-position: 0px -500px;
 }
 // hexagon-design
-$hex-width: 20px;
+$hex-width: 28px;
 // warning!
 // do not change anything under this line here!
 $hex-height: floor(calc(1.732 * $hex-width));

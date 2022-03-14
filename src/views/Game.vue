@@ -1,16 +1,21 @@
 <template>
-    <div id="game" style="height: 100vh; position: relative">
+    <div id="game" style="height: 100vh; position: relative" @click.stop="selectedTileIndices = null">
         <div class="d-flex justify-content-center pt-2" style="position: relative; width: 100%">
-            <div class="button" :disabled="gameStarted" @click="reset()">reset</div>
-            <div class="button" :disabled="gameStarted" @click="gameLoop()">step</div>
+            <div class="button" @click="reset()">reset</div>
+            <div class="button" @click="gameLoop()">step</div>
+            <!-- <div class="button" @click="testSetup()">setup</div> -->
+            <div class="button" @click="visible = !visible">visibility</div>
             <div class="button" @click="gameStarted = !gameStarted">
                 {{ gameStarted ? 'pause' : 'play' }}
             </div>
-            <div class="button" :disabled="waveSpawn" @click="waveSpawn = true">Next Wave</div>
+            <div class="button" @click="autospawn = !autospawn">
+                {{ autospawn ? 'autospawn' : 'no autospawn' }}
+            </div>
+            <div class="button" @click=";(gamelooptick = 0), (waveSpawn = true)">Next Wave</div>
         </div>
-        <!-- <div class="d-flex align-items-center justify-content-center" style="height: 100%"> -->
+        <!-- game -->
         <div>
-            <div class="mt-4">
+            <div class="mt-4" v-if="visible">
                 <div class="d-flex justify-content-center">
                     <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                         <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
@@ -22,14 +27,6 @@
                                         fill="none"
                                         stroke="red"
                                     />
-                                    <circle
-                                        v-if="selectedTileIndices && selectedTileIndices[0] == xIndex && selectedTileIndices[1] == yIndex"
-                                        :cx="getPosition(xIndex, yIndex)[0]"
-                                        :cy="getPosition(xIndex, yIndex)[1]"
-                                        :r="hex.tower?.range"
-                                        fill="rgba(255, 0, 30, 0.13)"
-                                        :stroke="hex.tower?.color"
-                                    />
                                 </Teleport>
                             </div>
                             <div v-else class="hex" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0"></div>
@@ -40,28 +37,38 @@
             <svg id="polylineContainer" style="position: absolute; left: 0; top: 0; pointer-events: none; width: 100%; height: 100%">
                 <!-- enemy  -->
                 <circle v-for="enemy of enemies" :key="JSON.stringify(enemy)" :cx="enemy.cords[0]" :cy="enemy.cords[1]" :r="enemy.size / 2" :fill="enemy.color" />
-
-                <polyline
-                    v-for="enemy of enemies"
-                    :key="JSON.stringify(enemy)"
-                    :points="`${enemy.cords[0] - enemy.size - 1},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size + 1},${enemy.cords[1] - enemy.size}`"
-                    fill="none"
-                    stroke="black"
-                    stroke-width="5px"
-                />
-                <polyline
-                    v-for="enemy of enemies"
-                    :key="JSON.stringify(enemy)"
-                    :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP},${
-                        enemy.cords[1] - enemy.size
-                    }`"
-                    fill="none"
-                    stroke="red"
-                    stroke-width="3px"
-                />
+                <template v-if="visible">
+                    <polyline
+                        v-for="enemy of enemies"
+                        :key="JSON.stringify(enemy)"
+                        :points="`${enemy.cords[0] - enemy.size - 1},${enemy.cords[1] - enemy.size} ${enemy.cords[0] + enemy.size + 1},${enemy.cords[1] - enemy.size}`"
+                        fill="none"
+                        stroke="black"
+                        stroke-width="5px"
+                    />
+                    <polyline
+                        v-for="enemy of enemies"
+                        :key="JSON.stringify(enemy)"
+                        :points="`${enemy.cords[0] - enemy.size},${enemy.cords[1] - enemy.size} ${
+                            enemy.cords[0] - enemy.size + (enemy.size * 2 * enemy.HP) / enemy.maxHP
+                        },${enemy.cords[1] - enemy.size}`"
+                        fill="none"
+                        stroke="red"
+                        stroke-width="3px"
+                    />
+                </template>
                 <!--  -->
+                <circle
+                    v-if="selectedTileIndices && selectedTower"
+                    :cx="getPosition(selectedTileIndices[0], selectedTileIndices[1])[0]"
+                    :cy="getPosition(selectedTileIndices[0], selectedTileIndices[1])[1]"
+                    :r="selectedTower.range"
+                    fill="rgba(255, 0, 30, 0.13)"
+                    :stroke="selectedTower.color"
+                />
             </svg>
         </div>
+        <!--  -->
         <!-- player´s menu -->
         <div id="playMenu" class="card w-100 shadow-none" style="position: absolute; bottom: 0px">
             <div class="card-body d-flex row col-12">
@@ -187,7 +194,7 @@
                                         <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
                                         <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
                                     </div>
-                                    <div v-if="selectedTower">
+                                    <div v-if="selectedTower && selectedTower.type !== 'bank'">
                                         <div>dmg dealt: {{ Math.floor(selectedTower.dmgDealt) }}</div>
                                         <div class="d-flex justify-content-center">
                                             target:
@@ -203,6 +210,9 @@
                                                 </select>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div v-if="selectedTower.type == 'bank'">
+                                        <div>gold earned: {{ Math.floor(selectedTower.dmgDealt) }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -294,6 +304,44 @@ const TERRAIN = {
     forest: { atk: 1, atkspeed: 0.8, range: 0.9 },
     grass: { atk: 1, atkspeed: 1, range: 1 },
 } as Record<type.TileOption['type'], Pick<type.Tower, 'atk' | 'atkspeed' | 'range'>>
+const ENEMIES = {
+    red: {
+        maxHP: 75,
+        HP: 75,
+        baseSpeed: 1,
+        speed: 1,
+    } as type.Enemy,
+    orange: {
+        maxHP: 200,
+        HP: 200,
+        baseSpeed: 1,
+        speed: 1,
+    } as type.Enemy,
+    yellow: {
+        maxHP: 500,
+        HP: 500,
+        baseSpeed: 1,
+        speed: 1,
+    } as type.Enemy,
+    green: {
+        maxHP: 1000,
+        HP: 1000,
+        baseSpeed: 1,
+        speed: 1,
+    } as type.Enemy,
+    blue: {
+        maxHP: 2000,
+        HP: 2000,
+        baseSpeed: 1,
+        speed: 1,
+    } as type.Enemy,
+    purple: {
+        maxHP: 5000,
+        HP: 5000,
+        baseSpeed: 1,
+        speed: 1,
+    } as type.Enemy,
+}
 export default defineComponent({
     // components: { Navbar },
     setup() {
@@ -301,27 +349,25 @@ export default defineComponent({
     },
     data() {
         return {
+            ticks: 60,
+            visible: true,
             player: {
                 gold: 100,
                 hp: 100,
             } as type.Player,
 
             hexagonSize: 50,
-            fieldWidth: 50,
-            fieldHeight: 18,
-
+            fieldWidth: 32,
+            fieldHeight: 12,
             field: [] as unknown as type.Field,
-
             counter: 0,
-
             path: [] as type.FieldDiv[],
-
             enemies: [] as type.Enemy[],
-
             gameStarted: false,
             gamelooptick: 0,
-            wave: 1,
+            wave: 0,
             waveSpawn: true,
+            autospawn: false,
             spawned: 0,
 
             selectedTileIndices: null as type.Vector | null,
@@ -338,11 +384,10 @@ export default defineComponent({
             pressedKeys: {} as Record<string, boolean>,
         }
     },
-    async mounted() {
-        await this.createField()
+    mounted() {
+        this.createField()
         this.startGame()
         document.addEventListener('keyup', e => e.code == 'Space' && (this.gameStarted = !this.gameStarted))
-        document.getElementById('0|0')!.click()
     },
     computed: {
         selectedTile(): type.FieldDiv | null {
@@ -366,6 +411,7 @@ export default defineComponent({
         //reset
         reset() {
             this.gameStarted = false
+            this.autospawn = false
             this.gamelooptick = 0
             this.wave = 0
             this.player.gold = 100
@@ -376,7 +422,7 @@ export default defineComponent({
             this.createField()
         },
         //map
-        createField() {
+        async createField() {
             this.field = [] as unknown as type.Field
             for (let row = 0; row < this.fieldWidth; row++) {
                 let fieldRow = [] as type.FieldDiv[]
@@ -387,6 +433,7 @@ export default defineComponent({
                             color: '#005000',
                             type: 'forest',
                             indices: [row, hex],
+                            rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
                         })
                     }
                     if (i == 1 || i == 2) {
@@ -394,6 +441,7 @@ export default defineComponent({
                             color: '#0000CC',
                             type: 'water',
                             indices: [row, hex],
+                            rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
                         })
                     }
                     if (i == 3 || i == 4) {
@@ -401,6 +449,7 @@ export default defineComponent({
                             color: '#754c00',
                             type: 'hill',
                             indices: [row, hex],
+                            rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
                         })
                     }
                     if (i > 4) {
@@ -408,12 +457,18 @@ export default defineComponent({
                             color: '#008000',
                             type: 'grass',
                             indices: [row, hex],
+                            rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
                         })
                     }
                 }
                 this.field.push(fieldRow)
             }
-            this.generatePath('basic')
+            await this.generatePath('basic')
+            for (let row of this.field) {
+                for (let hex of row) {
+                    hex.rect = document.getElementById(`${hex.indices[0]}|${hex.indices[1]}`)!.getBoundingClientRect()
+                }
+            }
         },
         generatePath(type: 'basic' | 'complex') {
             this.clearPath()
@@ -470,7 +525,7 @@ export default defineComponent({
             this.path = []
             this.field.forEach((row, x) =>
                 row.forEach((hex, y) => {
-                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '135, 50%, 60%' }
+                    if (hex.type == 'path') this.field[x][y] = { indices: hex.indices, type: 'grass', color: '135, 50%, 60%', rect: hex.rect }
                 })
             )
         },
@@ -504,7 +559,7 @@ export default defineComponent({
         },
         testSetup() {
             this.clearPath()
-            this.wave = 100
+            this.wave = 10000
             let gold = 0
             for (let i = 0; i < this.wave; i++) {
                 gold += 10 * i ** 0.5 * i
@@ -520,6 +575,11 @@ export default defineComponent({
             for (let i = 0; i < this.fieldWidth; i++) {
                 this.buildTower([i, 6], TOWER_OPTIONS['laser'])
             }
+            for (let row of this.field) {
+                for (let hex of row) {
+                    hex.rect = document.getElementById(`${hex.indices[0]}|${hex.indices[1]}`)!.getBoundingClientRect()
+                }
+            }
         },
         //game
         startGame() {
@@ -534,31 +594,47 @@ export default defineComponent({
                     this.gameLoop()
                 }
                 if (this.selectedTile) this.building()
-            }, 1000 / 60)
+            }, 1000 / this.ticks)
         },
         gameLoop() {
-            this.gamelooptick++
             this.checkEntities()
             this.movement()
             this.towerAction()
             this.spawnWave()
+            this.gamelooptick++
         },
         spawnWave() {
             if (!this.waveSpawn) return
             let toSpawn = Math.floor(5 * this.wave ** 0.5)
 
-            if (this.gamelooptick % (60 / this.wave ** 0.5) < 1) {
-                switch (this.getRandomInt(2)) {
-                    case 0:
-                        this.createEnemy('blue')
-                        this.spawned++
-                        break
-                    case 1:
-                        this.createEnemy('yellow')
-                        this.spawned += 1.5
-                        break
+            if (this.gamelooptick % (this.ticks / this.wave ** 0.5) < 1) {
+                let i = this.getRandomInt(this.wave)
+                if (i < 5) {
+                    this.createEnemy('red')
+                    this.spawned++
+                }
+                if (5 <= i && i < 10) {
+                    this.createEnemy('orange')
+                    this.spawned += 1.5
+                }
+                if (10 <= i && i < 20) {
+                    this.createEnemy('yellow')
+                    this.spawned += 2.5
+                }
+                if (20 <= i && i < 50) {
+                    this.createEnemy('green')
+                    this.spawned += 5
+                }
+                if (50 <= i && i < 100) {
+                    this.createEnemy('blue')
+                    this.spawned += 10
+                }
+                if (100 <= i && i < 250) {
+                    this.createEnemy('purple')
+                    this.spawned += 15
                 }
             }
+
             if (toSpawn <= this.spawned) {
                 this.waveSpawn = false
                 this.spawned = 0
@@ -579,64 +655,34 @@ export default defineComponent({
             this.checkEnemyLife()
         },
         towerAction() {
-            for (let t of this.towers.filter(t => this.gamelooptick % (60 / t.atkspeed) < 1)) {
+            for (let t of this.towers.filter(t => this.gamelooptick % (this.ticks / t.atkspeed) < 1)) {
                 this.getTowerTarget(t)
                 this.towerAttack(t)
             }
         },
         //enemy
-        createEnemy(type: string) {
-            switch (type) {
-                case 'blue':
-                    {
-                        let hp = 75 * this.wave ** 0.5
-                        let enemy = {
-                            cords: this.getPosition(...this.path[0].indices),
-                            id: JSON.stringify(Math.random()),
-                            maxHP: hp,
-                            HP: hp,
-                            size: 16,
-                            nextPathNumber: 1,
-                            baseSpeed: 1.5,
-                            speed: 1.5,
-                            distanceTravelled: 0,
-                            color: 'blue',
-                            slowduration: 0,
-                        } as type.Enemy
-                        this.enemies.push(enemy)
-                    }
-                    break
-                case 'yellow':
-                    {
-                        let hp = 150 * this.wave ** 0.5
-                        let enemy = {
-                            cords: this.getPosition(...this.path[0].indices),
-                            id: JSON.stringify(Math.random()),
-                            maxHP: hp,
-                            HP: hp,
-                            size: 16,
-                            nextPathNumber: 1,
-                            baseSpeed: 0.8,
-                            speed: 0.8,
-                            distanceTravelled: 0,
-                            color: 'yellow',
-                            slowduration: 0,
-                        } as type.Enemy
-                        this.enemies.push(enemy)
-                    }
-                    break
+        createEnemy(type: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple') {
+            let enemy = {
+                ...ENEMIES[type],
+                cords: this.getPosition(...this.path[0].indices),
+                id: JSON.stringify(Math.random()),
+                slowduration: 0,
+                distanceTravelled: 0,
+                size: 16,
+                nextPathNumber: 1,
+                color: type,
             }
+            this.enemies.push(enemy)
         },
         checkEnemyLife() {
-            this.player.gold += this.enemies.filter(e => e.HP <= 0).reduce((a, c) => a + c.maxHP / 10, 0)
+            this.player.gold += this.enemies.filter(e => e.HP <= 0).reduce((a, c) => a + c.maxHP / 75, 0)
             this.enemies = this.enemies.filter(e => e.HP > 0)
 
-            if (this.enemies.length == 0) {
-                if (!this.waveSpawn) {
-                    this.wave++
-                    this.waveSpawn = true
-                    this.bankBonus()
-                }
+            if (this.enemies.length == 0 && (this.autospawn || this.waveSpawn)) {
+                this.gamelooptick = 0
+                this.waveSpawn = true
+                this.wave++
+                this.bankBonus()
             }
         },
         moveEnemy() {
@@ -666,20 +712,21 @@ export default defineComponent({
         },
         //utility
         bankBonus() {
-            if (this.banks?.length)
+            if (this.banks?.length) {
+                let bonus = 0
+                bonus = this.player.gold * 0.01
+                if (bonus > 100) bonus = 100
+                this.player.gold += bonus * this.banks.length
                 for (let b of this.banks) {
-                    let bonus = 0
-                    bonus = this.player.gold * 0.01
-                    if (bonus > 100) bonus = 100
-                    this.player.gold += bonus
-                    console.log(bonus)
+                    b.dmgDealt += bonus
                 }
+            }
         },
         //towers
         buildTower(position: type.Vector, tower: type.Tower) {
-            // this.selectedTileIndices = null
             if (!tower) return
             if (this.player.gold - TOWER_OPTIONS[tower.type].price < 0) return
+            if (!tower.buildingFields.some(f => f == this.field[position[0]][position[1]].type)) return
             let buffs = TERRAIN[this.field[position[0]][position[1]].type]
             let newTower = this.tower([position[0], position[1]], tower)
             newTower.atk *= buffs.atk
@@ -710,7 +757,7 @@ export default defineComponent({
             }
         },
         getTowerTarget(t: type.Tower) {
-            let rect = document.getElementById(`${t.indices[0]}|${t.indices[1]}`)!.getBoundingClientRect()
+            let rect = this.field[t.indices[0]][t.indices[1]].rect
             let target = null as type.Enemy | null
             let towerposition = this.middlePointRect(rect)
             for (let enemy of this.enemies.filter(e => e.HP > 0)) {
@@ -776,23 +823,22 @@ export default defineComponent({
 
         //general
         getPosition(xIndex: number, yIndex: number) {
-            let rect = document.getElementById(`${xIndex}|${yIndex}`)!.getBoundingClientRect()
-            return this.middlePointRect(rect)
+            return this.middlePointRect(this.field[xIndex][yIndex].rect)
         },
         getEnemyPosition(id: string) {
             let enemy = this.enemies.find(e => e.id == id)
             if (!enemy) return
             return enemy.cords
         },
-        checkPrice(price: number) {
-            if (price <= this.player.gold) {
-                this.player.gold -= price
-                return true
-            }
-            return false
-        },
         pathfield(indices: type.Vector, start: boolean, finish: boolean): type.FieldDiv {
-            return { color: '39, 50%, 60%', type: 'path', indices: indices, start: start, finish: finish }
+            return {
+                color: '39, 50%, 60%',
+                type: 'path',
+                indices: indices,
+                start: start,
+                finish: finish,
+                rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
+            }
         },
 
         middlePointRect(rect: type.Rect) {

@@ -1,3 +1,5 @@
+import { ClientRectObject } from '@popperjs/core'
+
 export interface Map {
     field: FieldDiv[]
     name: string
@@ -13,6 +15,7 @@ export interface FieldDiv {
     tower?: Tower
     start?: boolean
     finish?: boolean
+    rect: ClientRectObject
 }
 
 export interface Enemy {
