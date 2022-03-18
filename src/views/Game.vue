@@ -771,8 +771,14 @@ export default defineComponent({
 
                 if (target.HP < 0) target.HP = 0
 
-                if (tower.type == 'canonship') this.enemies.filter(e => lengthSquared(subtract(e.cords, target.cords)) < 100 ** 2).forEach(e => (e.HP -= tower.atk * 0.6))
-                else if (tower.type == 'freezer') target.slowduration += 45 //duration in ticks'
+                if (tower.type == 'canonship') {
+                    this.enemies
+                        .filter(e => lengthSquared(subtract(e.cords, target.cords)) < 100 ** 2)
+                        .forEach(e => {
+                            e.HP -= tower.atk * 0.4
+                            if (e.HP < 0) e.HP = 0
+                        })
+                } else if (tower.type == 'freezer') target.slowduration += 45 //duration in ticks'
             }
         },
 
