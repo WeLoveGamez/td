@@ -19,7 +19,7 @@
                 <div class="d-flex justify-content-center">
                     <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                         <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
-                            <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
+                            <!-- <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
                                 <Teleport to="#polylineContainer">
                                     <polyline
                                         v-if="hex.tower?.target"
@@ -28,8 +28,26 @@
                                         stroke="red"
                                     />
                                 </Teleport>
+                            </div> -->
+                            <div class="hex field" :style="{ '--hex-color': TERRAIN[hex.type].color }" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
+                                <div
+                                    class="hex tower"
+                                    :style="{ '--hex-color': hex.tower?.color }"
+                                    v-if="field[xIndex][yIndex].tower"
+                                    :class="hex.tower?.type"
+                                    :id="xIndex + '|' + yIndex + ''"
+                                    tabindex="0"
+                                >
+                                    <Teleport to="#polylineContainer">
+                                        <polyline
+                                            v-if="hex.tower?.target"
+                                            :points="`${getPosition(xIndex, yIndex).join(', ')} ${getEnemyPosition(hex.tower.target)?.join(', ')}`"
+                                            fill="none"
+                                            stroke="red"
+                                        />
+                                    </Teleport>
+                                </div>
                             </div>
-                            <div v-else class="hex" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0"></div>
                         </div>
                     </div>
                 </div>
@@ -99,48 +117,33 @@
                             ></button>
                         </div>
                         <div class="carousel-inner">
-                            <div class="carousel-item active">
+                            <div
+                                class="carousel-item"
+                                :class="{ active: chunkIndex == 0 }"
+                                v-for="(towerChunk, chunkIndex) of Object.values(TOWER_OPTIONS).chunk(4)"
+                                :key="chunkIndex"
+                            >
                                 <div class="row col-12">
-                                    <div v-for="option in (['sniper', 'ballista', 'laser', 'canonship'] as const)" :key="option" class="col-3">
-                                        <div @click.stop="buildTower(selectedTileIndices!, TOWER_OPTIONS[option])">
+                                    <div v-for="towerOption in towerChunk" :key="towerOption.type" class="col-3">
+                                        <div @click.stop="buildTower(selectedTileIndices!, towerOption)">
                                             <div id="shop">
                                                 <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ TOWER_OPTIONS[option].type }}</div>
+                                                    <div class="card card-header p-0">{{ towerOption.type }}</div>
                                                     <div class="card card-body">
-                                                        <div class="hex mx-auto" :class="TOWER_OPTIONS[option].type"></div>
-                                                        <div>hotKey:{{ TOWER_OPTIONS[option].shortcut }}</div>
+                                                        <div
+                                                            class="hex tower"
+                                                            :style="{ '--hex-color': towerOption.color }"
+                                                            style="margin-left: 47%"
+                                                            :class="towerOption.type"
+                                                        ></div>
+                                                        <div class="mt-5">hotKey:{{ towerOption.shortcut }}</div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ TOWER_OPTIONS[option].price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ TOWER_OPTIONS[option].range }}</div>
+                                                            <div class="col-6 text-center p-0">price:{{ towerOption.price }}</div>
+                                                            <div class="col-6 text-center p-0">range:{{ towerOption.range }}</div>
                                                         </div>
                                                         <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ TOWER_OPTIONS[option].atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ TOWER_OPTIONS[option].atk }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row col-12">
-                                    <div v-for="option in (['bank','freezer'] as const)" :key="option" class="col-3">
-                                        <div @click.stop="buildTower(selectedTileIndices!, TOWER_OPTIONS[option])">
-                                            <div id="shop">
-                                                <div class="card text-dark">
-                                                    <div class="card card-header p-0">{{ TOWER_OPTIONS[option].type }}</div>
-                                                    <div class="card card-body">
-                                                        <div class="hex mx-auto" :class="TOWER_OPTIONS[option].type"></div>
-                                                        <div>hotKey:{{ TOWER_OPTIONS[option].shortcut }}</div>
-                                                        <div class="row">
-                                                            <div class="col-6 text-center p-0">price:{{ TOWER_OPTIONS[option].price }}</div>
-                                                            <div class="col-6 text-center p-0">range:{{ TOWER_OPTIONS[option].range }}</div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <div class="col-6 text-center p-0">attackspeed:{{ TOWER_OPTIONS[option].atkspeed }}</div>
-                                                            <div class="col-6 text-center p-0">atk:{{ TOWER_OPTIONS[option].atk }}</div>
+                                                            <div class="col-6 text-center p-0">attackspeed:{{ towerOption.atkspeed }}</div>
+                                                            <div class="col-6 text-center p-0">atk:{{ towerOption.atk }}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -177,10 +180,10 @@
                                         <button
                                             class="btn btn-success w-50 ms-2 d-flex justify-content-center"
                                             type="button"
-                                            @click.stop="upgrade(selectedTower!,selectedTower!.totalValue*0.3,1.04)"
+                                            @click.stop="upgrade(selectedTower!, Math.floor(selectedTower!.totalValue*0.3),1.04)"
                                         >
                                             upgrade Tower
-                                            <div style="color: rgb(255, 0, 21)">
+                                            <div :style=" {color: player.gold >= Math.floor(selectedTower!.totalValue*0.3) ?  'rgb(0, 230, 0)' :  'rgb(255, 0, 21)'} ">
                                                 &nbsp;{{ Math.floor(selectedTower!.totalValue*0.3) }}
                                                 <i class="fas fa-coins"></i>
                                             </div>
@@ -227,82 +230,31 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as type from '@/types'
+import { TOWER_OPTIONS } from '@/towers'
 
 import { add, subtract, length, lengthSquared, divide } from '@/calc'
 
-const TOWER_OPTIONS = {
-    sniper: {
-        atk: 30,
-        range: 300,
-        atkspeed: 1,
-        price: 25,
-        totalValue: 25,
-        buildingFields: ['forest', 'hill', 'grass'],
-        color: '#FF0000',
-        type: 'sniper',
-        shortcut: '1',
-    } as type.Tower,
-    ballista: {
-        atk: 10,
-        range: 75,
-        atkspeed: 3,
-        price: 25,
-        totalValue: 25,
-        buildingFields: ['forest', 'hill', 'grass'],
-        color: '#00FF00',
-        type: 'ballista',
-        shortcut: '2',
-    } as type.Tower,
-    laser: {
-        atk: 3,
-        range: 100,
-        atkspeed: 10,
-        price: 25,
-        totalValue: 25,
-        buildingFields: ['forest', 'hill', 'grass'],
-        color: '#AA00FF',
-        type: 'laser',
-        shortcut: '3',
-    } as type.Tower,
-    canonship: {
-        atk: 15,
-        range: 150,
-        atkspeed: 2,
-        price: 25,
-        totalValue: 25,
-        buildingFields: ['water'],
-        color: '#754c33',
-        type: 'canonship',
-        shortcut: '4',
-    } as type.Tower,
-    bank: {
-        atk: 0,
-        range: 0,
-        atkspeed: 0,
-        price: 100,
-        totalValue: 100,
-        buildingFields: ['grass'],
-        color: '#754c33',
-        type: 'bank',
-        shortcut: '5',
-    } as type.Tower,
-    freezer: {
-        atk: 10,
-        range: 100,
-        atkspeed: 2,
-        price: 30,
-        totalValue: 30,
-        buildingFields: ['forest', 'hill', 'grass'],
-        color: '#754c33',
-        type: 'freezer',
-        shortcut: '6',
-    } as type.Tower,
+console.log(type.five)
+
+declare global {
+    interface Array<T> {
+        chunk(chunkSize: number): T[][]
+    }
 }
+Object.defineProperty(Array.prototype, 'chunk', {
+    value: function (chunkSize: number) {
+        var R = []
+        for (var i = 0; i < this.length; i += chunkSize) R.push(this.slice(i, i + chunkSize))
+        return R
+    },
+})
+
 const TERRAIN = {
-    hill: { atk: 1, atkspeed: 1, range: 1.2 },
-    water: { atk: 1, atkspeed: 1, range: 1 },
-    forest: { atk: 1, atkspeed: 0.8, range: 0.9 },
-    grass: { atk: 1, atkspeed: 1, range: 1 },
+    hill: { atk: 1, atkspeed: 1, range: 1.2, color: 'hsl(93, 22%, 67%)' },
+    water: { atk: 1, atkspeed: 1, range: 1, color: 'hsl(202, 50%, 60%)' },
+    forest: { atk: 1, atkspeed: 0.8, range: 0.9, color: 'hsl(125, 36%, 35%)' },
+    grass: { atk: 1, atkspeed: 1, range: 1, color: 'hsl(135, 50%, 60%)' },
+    path: { atk: 0, atkspeed: 0, range: 0, color: 'hsl(39, 50%, 60%) ' },
 } as Record<type.TileOption['type'], Pick<type.Tower, 'atk' | 'atkspeed' | 'range'>>
 const ENEMIES = {
     red: {
@@ -345,7 +297,7 @@ const ENEMIES = {
 export default defineComponent({
     // components: { Navbar },
     setup() {
-        return { TOWER_OPTIONS }
+        return { TOWER_OPTIONS, TERRAIN }
     },
     data() {
         return {
@@ -812,12 +764,15 @@ export default defineComponent({
             this.field[t.indices[0]][t.indices[1]].tower!.target = target?.id ?? null
         },
         towerAttack(tower: type.Tower) {
-            let Index = this.enemies.findIndex(e => e.id == tower.target)
-            if (Index != -1) {
-                this.enemies[Index].HP -= tower.atk
+            let target = this.enemies[this.enemies.findIndex(e => e.id == tower.target)]
+            if (target) {
+                target.HP -= tower.atk
                 tower.dmgDealt += tower.atk
-                if (tower.type == 'freezer') this.enemies[Index].slowduration += 45 //duration in ticks
-                if (this.enemies[Index].HP < 0) this.enemies[Index].HP = 0
+
+                if (target.HP < 0) target.HP = 0
+
+                if (tower.type == 'canonship') this.enemies.filter(e => lengthSquared(subtract(e.cords, target.cords)) < 100 ** 2).forEach(e => (e.HP -= tower.atk * 0.6))
+                else if (tower.type == 'freezer') target.slowduration += 45 //duration in ticks'
             }
         },
 

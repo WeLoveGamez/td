@@ -1,6 +1,9 @@
 import { ClientRectObject } from '@popperjs/core'
+import type { RAW_TOWER_OPTIONS } from './towers'
 
-export interface Map {
+export type towerTypes = keyof typeof RAW_TOWER_OPTIONS
+
+export type Map = {
     field: FieldDiv[]
     name: string
     creator: string
@@ -8,7 +11,7 @@ export interface Map {
 
 export type Field = [FieldDiv[]]
 
-export interface FieldDiv {
+export type FieldDiv = {
     color: string
     type: TileOption['type']
     indices: Vector
@@ -18,7 +21,7 @@ export interface FieldDiv {
     rect: ClientRectObject
 }
 
-export interface Enemy {
+export type Enemy = {
     size: number
     cords: Vector
     maxHP: number
@@ -32,14 +35,13 @@ export interface Enemy {
     slowduration: number
 }
 
-export interface Tower {
+export type RawTower = {
     atk: number
     atkspeed: number
     range: number
     price: number
     totalValue: number
     color: string
-    type: 'sniper' | 'ballista' | 'laser' | 'canonship' | 'bank' | 'freezer'
     indices: Vector
     target: string | null
     filter: 'first' | 'last' | 'closest' | 'mostHealthy' | 'mostWounded' | 'slowest' | 'fastest'
@@ -49,12 +51,14 @@ export interface Tower {
     dmgDealt: number
 }
 
-export interface Player {
+export type Tower = RawTower & { type: towerTypes }
+
+export type Player = {
     gold: number
     hp: number
 }
 
-export interface Rect {
+export type Rect = {
     left: number
     right: number
     top: number
@@ -62,14 +66,17 @@ export interface Rect {
     height: number
     width: number
 }
-export interface ShopOption {
+export type ShopOption = {
     color: string
 }
-export interface TileOption extends ShopOption {
+export type TileOption = ShopOption & {
     type: 'path' | 'water' | 'hill' | 'grass' | 'forest'
 }
-export interface TowerOption extends ShopOption {
-    type: 'sniper' | 'ballista' | 'laser' | 'canonship' | 'bank' | 'freezer'
+export type TowerOption = ShopOption & {
+    type: towerTypes
 }
 
 export type Vector = [number, number]
+export type Vector2 = [number, number]
+
+export const five = 5

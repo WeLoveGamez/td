@@ -1,29 +1,7 @@
 // color-variables --use only hsl!
 :root {
-    // towers
-    --sniper: hsl(0, 50%, 60%);
-    --sniper-focus: hsl(0, 50%, 50%);
-    --ballista: hsl(318, 99%, 36%);
-    --ballista-focus: hsl(318, 99%, 26%);
-    --laser: hsl(303, 50%, 70%);
-    --laser-focus: hsl(303, 50%, 60%);
-    --canonship: hsl(32, 60%, 28%);
-    --canonship-focus: hsl(32, 60%, 20%);
-    --bank: hsl(59, 100%, 59%);
-    --bank-focus: hsl(59, 100%, 49%);
-    --freezer: hsl(221, 100%, 67%);
-    --freezer-focus: hsl(221, 100%, 57%);
     // fields
-    --path: hsl(39, 50%, 60%);
-    --path-focus: hsl(39, 50%, 50%);
-    --grass: hsl(135, 50%, 60%);
-    --grass-focus: hsl(135, 50%, 50%);
-    --water: hsl(202, 50%, 60%);
-    --water-focus: hsl(202, 50%, 50%);
-    --hill: hsl(93, 22%, 67%);
-    --hill-focus: hsl(93, 22%, 57%);
-    --forest: hsl(125, 36%, 35%);
-    --forest-focus: hsl(125, 36%, 25%);
+
     --general: hsl(0, 0%, 23%);
     --button: hsl(0, 0%, 23%);
     --button-darker: hsl(0, 0%, 40%);
@@ -35,348 +13,62 @@
     background-position: 0px -500px;
 }
 // hexagon-design
-$hex-width: 28px;
-// warning!
-// do not change anything under this line here!
-$hex-height: floor(calc(1.732 * $hex-width));
+$field-width: 28px;
+$field-height: floor(1.732 * $field-width);
+$tower-width: 24px;
+$tower-height: floor(1.732 * $tower-width);
+
 .offsetRow:nth-child(2n + 1) {
-    margin-top: round(calc($hex-width - round(calc($hex-width * 0.1))));
+    margin-top: round(calc($field-width - round(calc($field-width * 0.1))));
 }
 .hex {
     position: relative;
-    width: $hex-width;
-    height: $hex-height;
-    margin: 2px round(calc(($hex-width/2) / 2) + 1);
+    margin: 2px round(calc(($field-width/2) / 2) + 1);
     -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
     box-shadow: 4px 7px 40px 0px rgba(0, 0, 0, 0.88);
-    &.path {
-        background-color: var(--path);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--path);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--path);
-        }
-        &:focus {
-            background-color: var(--path-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--path-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--path-focus);
-            }
-        }
+
+    &.field {
+        width: $field-width;
+        height: $field-height;
+        --hex-side-width: #{floor($field-width / 2)};
+        --hex-side-height: #{floor($field-height / 2)};
     }
-    &.grass {
-        background-color: var(--grass);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--grass);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--grass);
-        }
-        &:focus {
-            background-color: var(--grass-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--grass-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--grass-focus);
-            }
-        }
+    &.tower {
+        width: $tower-width;
+        height: $tower-height;
+        --hex-side-width: #{floor($tower-width / 2)};
+        --hex-side-height: #{floor($tower-height / 2)};
+
+        z-index: 3;
+        position: absolute;
+        left: -6px;
+        margin-top: 4px;
+        box-shadow: 0px 0px 30px 10px rgba(0, 0, 0, 0.5);
     }
-    &.hill {
-        background-color: var(--hill);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--hill);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--hill);
-        }
-        &:focus {
-            background-color: var(--hill-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--hill-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--hill-focus);
-            }
-        }
+    background-color: var(--hex-color);
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        border-top: var(--hex-side-height) solid transparent;
+        border-bottom: var(--hex-side-height) solid transparent;
     }
-    &.water {
-        background-color: var(--water);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--water);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--water);
-        }
-        &:focus {
-            background-color: var(--water-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--water-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--water-focus);
-            }
-        }
+    &::after {
+        right: 100%;
+        border-right: var(--hex-side-width) solid var(--hex-color);
     }
-    &.forest {
-        background-color: var(--forest);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--forest);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--forest);
-        }
-        &:focus {
-            background-color: var(--forest-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--forest-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--forest-focus);
-            }
-        }
+    &::before {
+        left: 100%;
+        border-left: var(--hex-side-width) solid var(--hex-color);
     }
-    &.sniper {
-        background-color: var(--sniper);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
+    &:focus {
+        filter: brightness(0.8);
         &::after {
             right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--sniper);
         }
         &::before {
             left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--sniper);
-        }
-        &:focus {
-            background-color: var(--sniper-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--sniper-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--sniper-focus);
-            }
-        }
-    }
-    &.laser {
-        background-color: var(--laser);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--laser);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--laser);
-        }
-        &:focus {
-            background-color: var(--laser-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--laser-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--laser-focus);
-            }
-        }
-    }
-    &.canonship {
-        background-color: var(--canonship);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--canonship);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--canonship);
-        }
-        &:focus {
-            background-color: var(--canonship-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--canonship-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--canonship-focus);
-            }
-        }
-    }
-    &.ballista {
-        background-color: var(--ballista);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--ballista);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--ballista);
-        }
-        &:focus {
-            background-color: var(--ballista-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--ballista-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--ballista-focus);
-            }
-        }
-    }
-    &.bank {
-        background-color: var(--bank);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--bank);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--bank);
-        }
-        &:focus {
-            background-color: var(--bank-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--bank-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--bank-focus);
-            }
-        }
-    }
-    &.freezer {
-        background-color: var(--freezer);
-        &::before,
-        &::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            border-top: floor(calc($hex-height/2)) solid transparent;
-            border-bottom: floor(calc($hex-height/2)) solid transparent;
-        }
-        &::after {
-            right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--freezer);
-        }
-        &::before {
-            left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--freezer);
-        }
-        &:focus {
-            background-color: var(--freezer-focus);
-            &::after {
-                right: 100%;
-                border-right: floor(calc($hex-width/2)) solid var(--freezer-focus);
-            }
-            &::before {
-                left: 100%;
-                border-left: floor(calc($hex-width/2)) solid var(--freezer-focus);
-            }
         }
     }
 }
@@ -387,9 +79,9 @@ $hex-height: floor(calc(1.732 * $hex-width));
     align-items: center;
     justify-content: center;
     position: relative;
-    width: calc($hex-width * 6);
-    height: $hex-height;
-    margin: 2px round(calc(($hex-width/2) / 2) + 10);
+    width: calc($field-width * 6);
+    height: $field-height;
+    margin: 2px round(calc(($field-width/2) / 2) + 10);
     background-color: var(--button);
     -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
     box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
@@ -398,11 +90,11 @@ $hex-height: floor(calc(1.732 * $hex-width));
         background-color: var(--button-darker);
         &::before {
             left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--button-darker);
+            border-left: floor(calc($field-width/2)) solid var(--button-darker);
         }
         &::after {
             right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--button-darker);
+            border-right: floor(calc($field-width/2)) solid var(--button-darker);
         }
     }
     &:active {
@@ -410,11 +102,11 @@ $hex-height: floor(calc(1.732 * $hex-width));
         background-color: var(--button-darkest);
         &::before {
             left: 100%;
-            border-left: floor(calc($hex-width/2)) solid var(--button-darkest);
+            border-left: floor(calc($field-width/2)) solid var(--button-darkest);
         }
         &::after {
             right: 100%;
-            border-right: floor(calc($hex-width/2)) solid var(--button-darkest);
+            border-right: floor(calc($field-width/2)) solid var(--button-darkest);
         }
     }
     &::before,
@@ -422,23 +114,23 @@ $hex-height: floor(calc(1.732 * $hex-width));
         content: '';
         position: absolute;
         width: 0;
-        border-top: floor(calc($hex-height/2)) solid transparent;
-        border-bottom: floor(calc($hex-height/2)) solid transparent;
+        border-top: floor(calc($field-height/2)) solid transparent;
+        border-bottom: floor(calc($field-height/2)) solid transparent;
     }
     &::before {
         left: 100%;
-        border-left: floor(calc($hex-width/2)) solid var(--button);
+        border-left: floor(calc($field-width/2)) solid var(--button);
     }
     &:after {
         right: 100%;
-        border-right: floor(calc($hex-width/2)) solid var(--button);
+        border-right: floor(calc($field-width/2)) solid var(--button);
         top: 0px;
     }
 }
 
-// tower scss part
+// // tower scss part
 
-// shopcard
+// // shopcard
 
 .card {
     -webkit-box-shadow: 4px 7px 10px 0px rgba(0, 0, 0, 0.88);
