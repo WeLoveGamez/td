@@ -7,12 +7,12 @@
                     <div class="m-4 alert alert-danger text-center" v-if="error">Username or password is not correct</div>
                     <div class="p-4 row col-12">
                         <div class="col-6 offset-3">
-                            <input minlength="3" class="form-control" id="email" type="text" placeholder="email" v-model="email" autocomplete="off" />
+                            <SexyInput type="email" placeholder="email" :label-border="true" v-model="email" :error="errors.email"></SexyInput>
                         </div>
                     </div>
                     <div class="p-4 row col-12">
                         <div class="col-6 offset-3">
-                            <input minlength="3" class="form-control" id="password" type="password" placeholder="passwort" v-model="password" autocomplete="off" />
+                            <SexyInput type="password" placeholder="password" :label-border="true" v-model="password" minlength="6" :error="errors.password"></SexyInput>
                         </div>
                     </div>
                     <button class="btn btn-success m-4 col-2" type="submit" v-if="!loggingIn">Anmelden</button>
@@ -27,19 +27,29 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as API from '@/API'
+import SexyInput from '@/components/SexyInputs.vue'
 
 export default defineComponent({
+    components: {
+        SexyInput,
+    },
     data() {
         return {
             password: '',
             email: '',
             error: false,
             loggingIn: false,
+            errors: {} as any,
         }
     },
     methods: {
         async login() {
             this.error = false
+            this.errors = {}
+            if (!this.email) this.errors.email = 'fill in this field'
+            if (!this.password) this.errors.password = 'fill in this field'
+            if (Object.keys(this.errors).length) return
+
             this.loggingIn = true
             try {
                 await API.login(this.email, this.password)
