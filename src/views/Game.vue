@@ -19,16 +19,6 @@
                 <div class="d-flex justify-content-center">
                     <div class="offsetRow" v-for="(row, xIndex) in field" :key="JSON.stringify(row)">
                         <div v-for="(hex, yIndex) in row" :key="hex.indices.join('|')" @click.stop="selectedTileIndices = [xIndex, yIndex]">
-                            <!-- <div v-if="field[xIndex][yIndex].tower" class="hex" :class="hex.tower?.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
-                                <Teleport to="#polylineContainer">
-                                    <polyline
-                                        v-if="hex.tower?.target"
-                                        :points="`${getPosition(xIndex, yIndex).join(', ')} ${getEnemyPosition(hex.tower.target)?.join(', ')}`"
-                                        fill="none"
-                                        stroke="red"
-                                    />
-                                </Teleport>
-                            </div> -->
                             <div class="hex field" :style="{ '--hex-color': TERRAIN[hex.type].color }" :class="hex.type" :id="xIndex + '|' + yIndex + ''" tabindex="0">
                                 <div
                                     class="hex tower"
@@ -38,14 +28,7 @@
                                     :id="xIndex + '|' + yIndex + ''"
                                     tabindex="0"
                                 >
-                                    <Teleport to="#polylineContainer">
-                                        <polyline
-                                            v-if="hex.tower?.target"
-                                            :points="`${getPosition(xIndex, yIndex).join(', ')} ${getEnemyPosition(hex.tower.target)?.join(', ')}`"
-                                            fill="none"
-                                            stroke="red"
-                                        />
-                                    </Teleport>
+                                    <Teleport to="#polylineContainer"></Teleport>
                                 </div>
                             </div>
                         </div>
@@ -75,7 +58,15 @@
                         stroke-width="3px"
                     />
                 </template>
-                <!--  -->
+                <!-- targetLaser -->
+                <template v-for="tower of towers" :key="tower.indices">
+                    <polyline
+                        v-if="tower.target"
+                        :points="`${getPosition(tower.indices[0], tower.indices[1]).join(', ')} ${getEnemyPosition(tower.target)?.join(', ')}`"
+                        fill="none"
+                        stroke="red"
+                    />
+                </template>
                 <circle
                     v-if="selectedTileIndices && selectedTower"
                     :cx="getPosition(selectedTileIndices[0], selectedTileIndices[1])[0]"
@@ -178,6 +169,7 @@
                                             </div>
                                         </button>
                                         <button
+                                            v-if="selectedTower.type !== 'bank'"
                                             class="btn btn-success w-50 ms-2 d-flex justify-content-center"
                                             type="button"
                                             @click.stop="upgrade(selectedTower!, Math.floor(selectedTower!.totalValue*0.3),1.04)"
@@ -188,8 +180,20 @@
                                                 <i class="fas fa-coins"></i>
                                             </div>
                                         </button>
+                                        <button
+                                            v-else
+                                            class="btn btn-success w-50 ms-2 d-flex justify-content-center"
+                                            type="button"
+                                            @click.stop="upgrade(selectedTower!, Math.floor(selectedTower!.totalValue*0.3),0.05)"
+                                        >
+                                            upgrade Tower
+                                            <div :style=" {color: player.gold >= Math.floor(selectedTower!.totalValue*0.3) ?  'rgb(0, 230, 0)' :  'rgb(255, 0, 21)'} ">
+                                                &nbsp;{{ Math.floor(selectedTower!.totalValue*0.3) }}
+                                                <i class="fas fa-coins"></i>
+                                            </div>
+                                        </button>
                                     </div>
-                                    <div class="row col-12">
+                                    <div class="row col-12" v-if="selectedTower.type !== 'bank'">
                                         <div class="col-6">dmg/atttack: {{ selectedTower.atk.toFixed(2) }}</div>
                                         <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.atk * 0.04).toFixed(2) }}</div>
                                         <div class="col-6">attacks/s: {{ selectedTower.atkspeed.toFixed(2) }}</div>
@@ -197,7 +201,13 @@
                                         <div class="col-6">range: {{ selectedTower.range.toFixed(2) }}</div>
                                         <div class="col-6" style="color: rgb(0, 230, 0)">+{{ (selectedTower.range * 0.04).toFixed(2) }}</div>
                                     </div>
-                                    <div v-if="selectedTower && selectedTower.type !== 'bank'">
+                                    <div class="row col-12" v-else>
+                                        <div class="col-6">interest: {{ selectedTower.atk }}%</div>
+                                        <div class="col-6" style="color: rgb(0, 230, 0)">+0.05</div>
+                                        <div class="col-6">maxInterest: {{ 100 * selectedTower.atk }}</div>
+                                    </div>
+
+                                    <div v-if="selectedTower.type !== 'bank'">
                                         <div>dmg dealt: {{ Math.floor(selectedTower.dmgDealt) }}</div>
                                         <div class="d-flex justify-content-center">
                                             target:
@@ -214,7 +224,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="selectedTower.type == 'bank'">
+                                    <div v-else>
                                         <div>gold earned: {{ Math.floor(selectedTower.dmgDealt) }}</div>
                                     </div>
                                 </div>
@@ -233,8 +243,9 @@ import * as type from '@/types'
 import { TOWER_OPTIONS } from '@/towers'
 
 import { add, subtract, length, lengthSquared, divide } from '@/calc'
+import { thisExpression } from '@babel/types'
 
-console.log(type.five)
+console.log(type.debug)
 
 declare global {
     interface Array<T> {
@@ -415,7 +426,7 @@ export default defineComponent({
                 }
                 this.field.push(fieldRow)
             }
-            await this.generatePath('basic')
+            await this.generatePath('complex')
             for (let row of this.field) {
                 for (let hex of row) {
                     hex.rect = document.getElementById(`${hex.indices[0]}|${hex.indices[1]}`)!.getBoundingClientRect()
@@ -456,12 +467,26 @@ export default defineComponent({
                     this.field[x][y] = this.pathfield([x, y], true, false)
                     while (x < this.fieldWidth - 1) {
                         let validPointerNeighbours = []
-                        pointerNeighbours = this.findNeighbourFields(x, y, 'grass') //get all near fields of type grass
+                        pointerNeighbours = this.findNeighbourFields(x, y, false) //get all near fields of type grass
                         for (let neighbour of pointerNeighbours) {
                             let cords = neighbour.indices
-                            let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], 'path')
-
-                            if (neighboursPaths.length == 1) validPointerNeighbours.push(neighbour)
+                            let neighboursPaths = this.findNeighbourFields(cords[0], cords[1], true)
+                            //alex dont look
+                            if (neighboursPaths.length == 1) {
+                                if (x % 2 == 0 && x == neighbour.indices[0]) {
+                                    if (neighbour.indices[1] != this.fieldHeight - 1) {
+                                        validPointerNeighbours.push(neighbour)
+                                    }
+                                } else {
+                                    if (x % 2 == 1 && x == neighbour.indices[0]) {
+                                        if (neighbour.indices[1] != 0) {
+                                            validPointerNeighbours.push(neighbour)
+                                        }
+                                    } else {
+                                        validPointerNeighbours.push(neighbour)
+                                    }
+                                }
+                            }
                         }
                         if (validPointerNeighbours.length == 0) break
                         let random = this.getRandomInt(validPointerNeighbours.length - 1)
@@ -471,6 +496,11 @@ export default defineComponent({
                         this.path.push(this.pathfield(nextCords, false, false))
                         ;[x, y] = nextCords
                     }
+                    if (this.path[this.path.length - 1].indices[0] != this.fieldWidth - 1) {
+                        console.log('new')
+                        this.generatePath('complex')
+                    }
+                    break
             }
         },
         clearPath() {
@@ -481,7 +511,7 @@ export default defineComponent({
                 })
             )
         },
-        findNeighbourFields(x: number, y: number, type: string) {
+        findNeighbourFields(x: number, y: number, is_path: boolean) {
             let neighbours0 = [
                 { dir: 'up', x: 0, y: -1 },
                 { dir: 'down', x: 0, y: 1 },
@@ -504,8 +534,8 @@ export default defineComponent({
             for (let neighbour of neighbours) {
                 let targetX = x + neighbour.x
                 let targetY = y + neighbour.y
-                if (!(targetX < 0 || targetY < 0 || targetX > this.fieldWidth - 1 || targetY > this.fieldHeight - 1) && this.field[targetX][targetY].type == type)
-                    found.push(this.field[targetX][targetY])
+                if (!(targetX < 0 || targetY < 0 || targetX > this.fieldWidth - 1 || targetY > this.fieldHeight - 1))
+                    if (is_path ? this.field[targetX][targetY].type == 'path' : this.field[targetX][targetY].type != 'path') found.push(this.field[targetX][targetY])
             }
             return found
         },
@@ -665,13 +695,15 @@ export default defineComponent({
         //utility
         bankBonus() {
             if (this.banks?.length) {
+                let output = 0
                 let bonus = 0
                 bonus = this.player.gold * 0.01
-                if (bonus > 100) bonus = 100
-                this.player.gold += bonus * this.banks.length
                 for (let b of this.banks) {
+                    if (bonus > 100 * b.atk) bonus = 100 * b.atk
                     b.dmgDealt += bonus
+                    output += bonus
                 }
+                this.player.gold += output
             }
         },
         //towers
@@ -693,7 +725,8 @@ export default defineComponent({
         },
         upgrade(tower: type.Tower, upgradeCost: number, statIncrease: number) {
             if (this.player.gold - upgradeCost < 0) return
-            for (let prop of ['atk', 'atkspeed', 'range'] as const) tower[prop] *= statIncrease
+            if (tower.type !== 'bank') for (let prop of ['atk', 'atkspeed', 'range'] as const) tower[prop] *= statIncrease
+            else tower.atk += statIncrease
             tower.level++
             tower.totalValue += upgradeCost
             this.player.gold -= upgradeCost

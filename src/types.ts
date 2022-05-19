@@ -79,4 +79,4 @@ export type TowerOption = ShopOption & {
 export type Vector = [number, number]
 export type Vector2 = [number, number]
 
-export const five = 5
+export const debug = 'debug typescript'

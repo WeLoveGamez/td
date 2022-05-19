@@ -41,7 +41,7 @@ export const RAW_TOWER_OPTIONS = {
         shortcut: '4',
     } as type.RawTower,
     bank: {
-        atk: 0,
+        atk: 1,
         range: 0,
         atkspeed: 0,
         price: 100,
