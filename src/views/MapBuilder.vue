@@ -158,6 +158,7 @@ export default defineComponent({
                                 color: '#008000',
                                 type: 'grass',
                                 indices: [row, hex],
+                                rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
                             })
                         }
                         this.field.push(fieldRow)
@@ -166,7 +167,13 @@ export default defineComponent({
                 case 'pathClear':
                     for (let row = 0; row < this.fieldWidth; row++) {
                         for (let hex = 0; hex < this.fieldHeight; hex++) {
-                            if (this.field[row][hex].type == 'path') this.field[row][hex] = { indices: [row, hex], type: 'grass', color: '#008000' }
+                            if (this.field[row][hex].type == 'path')
+                                this.field[row][hex] = {
+                                    indices: [row, hex],
+                                    type: 'grass',
+                                    color: '#008000',
+                                    rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
+                                }
                         }
                     }
                     break
@@ -277,7 +284,8 @@ export default defineComponent({
         clearPath() {
             this.field.forEach((row, x) =>
                 row.forEach((hex, y) => {
-                    if (hex.type == 'path') hex = { indices: [x, y], type: 'grass', color: '#008000' }
+                    if (hex.type == 'path')
+                        hex = { indices: [x, y], type: 'grass', color: '#008000', rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 } }
                 })
             )
         },
@@ -350,7 +358,14 @@ export default defineComponent({
             console.error(msg)
         },
         pathfield(indices: type.Vector, start: boolean, finish: boolean): type.FieldDiv {
-            return { color: this.Options[0].color, type: 'path', indices: indices, start: start, finish: finish }
+            return {
+                color: this.Options[0].color,
+                type: 'path',
+                indices: indices,
+                start: start,
+                finish: finish,
+                rect: { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 },
+            }
         },
         middlePointRect(rect: type.Rect) {
             return [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5] as type.Vector

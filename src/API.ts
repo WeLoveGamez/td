@@ -14,11 +14,12 @@ export async function logout(): Promise<void> {
     currentUser.value = null
 }
 
-export async function register(email: string, password: string): Promise<void> {
+export async function register(username: string, email: string, password: string): Promise<void> {
     const auth = getAuth()
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     await setDoc(doc(getFirestore(), 'users', userCredential.user.uid), {
         email: email,
+        username: username,
     })
 }
 

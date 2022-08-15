@@ -1,32 +1,28 @@
 <template>
-    <div id="game">
-        <div class="d-flex align-items-stretch justify-content-center flex-column" style="height: 100vh">
-            <div class="card card-default w-50" style="margin-left: 25%">
-                <div class="card-header header">Registrierung</div>
-                <div class="card-body">
-                    <form @submit.prevent="register()" autocomplete="off">
-                        <div class="m-4 alert alert-danger text-center" v-if="error">{{ error }}</div>
-                        <div class="p-1 row col-12">
-                            <div class="col-6 offset-3">
-                                <input minlength="3" class="form-control" id="email" type="text" placeholder="email" v-model="email" autocomplete="off" />
-                            </div>
+    <div class="container d-flex align-items-stretch justify-content-center flex-column" style="height: 100vh">
+        <div class="card card-default w-75" style="margin-left: 12.5%">
+            <div class="card-header header">Registrierung</div>
+            <div class="card-body">
+                <form @submit.prevent="register()" autocomplete="off">
+                    <div class="m-4 alert alert-danger text-center" v-if="error">{{ error }}</div>
+                    <div class="p-4 row col-12">
+                        <div class="col-6 offset-3">
+                            <input minlength="3" class="form-control" id="email" type="text" placeholder="email" v-model="email" autocomplete="off" />
                         </div>
-                        <div class="p-1 row col-12">
-                            <div class="col-6 offset-3">
-                                <input minlength="3" class="form-control" id="password" type="password" placeholder="passwort" v-model="password" autocomplete="off" />
-                            </div>
+                    </div>
+                    <div class="p-4 row col-12">
+                        <div class="col-6 offset-3">
+                            <input minlength="3" class="form-control" id="password" type="password" placeholder="passwort" v-model="password" autocomplete="off" />
                         </div>
-                        <div class="p-1 row col-12">
-                            <div class="col-6 offset-3">
-                                <input minlength="3" class="form-control" id="confirm" type="password" placeholder="passwort" v-model="confirmed" autocomplete="off" />
-                            </div>
+                    </div>
+                    <div class="p-4 row col-12">
+                        <div class="col-6 offset-3">
+                            <input minlength="3" class="form-control" id="confirm" type="password" placeholder="passwort" v-model="confirmed" autocomplete="off" />
                         </div>
-                        <div class="row d-flex justify-content-center">
-                            <div class="button m-4 col-2" @click="register()" v-if="!registering" style="background-color: ">Registrieren</div>
-                            <span v-if="registering" class="m-4 spinner-border spinner-border-sm text-primary"></span>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <button class="btn btn-success m-4 col-2 text-light" type="submit" v-if="!registering">Registrieren</button>
+                    <span v-if="registering" class="m-4 spinner-border spinner-border-sm text-primary"></span>
+                </form>
             </div>
         </div>
     </div>
@@ -35,27 +31,46 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import * as API from '@/API'
+import SexyInput from '@/components/SexyInputs.vue'
 
 export default defineComponent({
+    components: {
+        SexyInput,
+    },
     data() {
         return {
             confirmed: '',
             password: '',
             email: '',
+            username: '',
             error: '',
+            errors: {} as any,
             registering: false,
         }
     },
     methods: {
         async register() {
-            if (this.confirmed !== this.password) this.error = 'Die passwörter stimmen nicht überein'
+            this.errors = {}
+            this.error = ''
+            if (this.confirmed !== this.password) {
+                this.errors.password = 'The passwords do not match'
+                this.errors.confirmed = 'The passwords do not match'
+            }
+            if (!this.username) this.errors.username = 'fill in this field'
+            if (!this.email) this.errors.email = 'fill in this field'
+            if (!this.password) this.errors.password = 'fill in this field'
+            if (!this.confirmed) this.errors.confirmed = 'fill in this field'
+            if (Object.keys(this.errors).length) {
+                this.error = 'Sorry, the account could not be registered'
+                return
+            }
             this.registering = true
             try {
-                await API.register(this.email, this.password)
+                await API.register(this.username, this.email, this.password)
                 this.$router.push('/game')
             } catch (e) {
                 console.log("couldn't register", e)
-                this.error = 'Der Account konnte leider nicht registriert werden'
+                this.error = 'Sorry, the account could not be registered'
             } finally {
                 this.registering = false
             }
