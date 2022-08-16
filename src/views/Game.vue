@@ -128,7 +128,7 @@
                                                             style="margin-left: 47%"
                                                             :class="towerOption.type"
                                                         ></div>
-                                                        <div class="text-center" class="mt-5">hotKey: {{ towerOption.shortcut }}</div>
+                                                        <div class="text-center mt-5">hotKey: {{ towerOption.shortcut }}</div>
                                                         <div class="row">
                                                             <div class="col-6">price: {{ towerOption.price }}</div>
                                                             <div class="col-6">range: {{ towerOption.range }}</div>
@@ -168,7 +168,7 @@
                                                 &nbsp;{{ Math.floor(selectedTower.totalValue / 2) }}
                                                 <i class="fas fa-coins"></i>
                                             </div>
-                                        </button>
+                                        </div>
                                         <button
                                             v-if="selectedTower.type !== 'bank'"
                                             class="btn btn-success w-50 ms-2 d-flex justify-content-center"

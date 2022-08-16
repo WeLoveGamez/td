@@ -34,9 +34,7 @@ import * as API from '@/API'
 import SexyInput from '@/components/SexyInputs.vue'
 
 export default defineComponent({
-    components: {
-        SexyInput,
-    },
+    components: {},
     data() {
         return {
             confirmed: '',
